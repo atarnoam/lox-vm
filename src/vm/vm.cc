@@ -24,7 +24,7 @@ InterpretResult VM::run() {
         switch (instruction = read_byte().opcode) {
         case OpCode::OP_RETURN:
             std::cout << to_string(pop()) << "\n";
-            return InterpretResult::INTERPRET_OK;
+            return InterpretResult::OK;
         case OpCode::OP_CONSTANT: {
             Value constant = read_constant();
             push(constant);

@@ -5,11 +5,7 @@
 
 #include <functional>
 
-enum struct InterpretResult {
-    INTERPRET_OK,
-    INTERPRET_COMPILE_ERROR,
-    INTERPRET_RUNTIME_ERROR
-};
+enum struct InterpretResult { OK, COMPILE_ERROR, RUNTIME_ERROR };
 
 struct VM {
     VM() = default;
