@@ -1,2 +1,5 @@
 # lox-vm
-writing a language in CPP
+Writing a language in CPP. 
+Code is based on Chapter III from [this book](https://craftinginterpreters.com/).
+
+
