@@ -8,7 +8,12 @@
 
 enum struct OpCode : int8_t {
     OP_CONSTANT,
-    OP_RETURN,
+    OP_ADD,
+    OP_SUBTRACT,
+    OP_MULTIPLY,
+    OP_DIVIDE,
+    OP_NEGATE,
+    OP_RETURN
 };
 
 using ConstRefT = int8_t;
