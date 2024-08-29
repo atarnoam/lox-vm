@@ -5,7 +5,7 @@
 
 void disassemble_chunk(Chunk &chunk, const std::string &name) {
     std::cout << fmt::format("== {} ==\n", name);
-    for (int offset = 0; offset < chunk.code.size();) {
+    for (int offset = 0; offset < static_cast<int>(chunk.code.size());) {
         offset = disassemble_instruction(chunk, offset);
     }
 }
@@ -24,11 +24,10 @@ int constant_instruction(const std::string &name, Chunk &chunk, int offset) {
 
 int disassemble_instruction(Chunk &chunk, int offset) {
     std::cout << fmt::format("{:04d} ", offset);
-    if (offset > 0 and
-        chunk.lines.get_line(offset - 1) == chunk.lines.get_line(offset)) {
+    if (offset > 0 and chunk.get_line(offset - 1) == chunk.get_line(offset)) {
         std::cout << "   | ";
     } else {
-        std::cout << fmt::format("{:4d} ", chunk.lines.get_line(offset));
+        std::cout << fmt::format("{:4d} ", chunk.get_line(offset));
     }
     OpCode instruction = chunk.code[offset].opcode;
     switch (instruction) {

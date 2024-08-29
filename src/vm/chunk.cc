@@ -18,6 +18,8 @@ int Chunk::add_constant(Value value) {
     return constants.size() - 1;
 }
 
+int Chunk::get_line(int instruction) { return lines.get_line(instruction); }
+
 Chunk::LineData::LineData()
     : lines(), last_line(lines.begin() - 1), last_instruction(-1) {}
 
@@ -53,7 +55,7 @@ int Chunk::LineData::get_line(int instruction) {
         curr_instruction = last_instruction;
         it = last_line;
     } else {
-        int curr_instruction = 0;
+        curr_instruction = 0;
         it = lines.begin();
     }
 

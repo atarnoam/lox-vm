@@ -4,7 +4,13 @@ cc_binary(
     name = "main",
     srcs = ["main.cc"],
     deps = [
+        "//src/vm",
         "//src/vm:chunk",
         "//src/vm:debug",
     ],
+)
+
+cc_library(
+    name = "debug_flags",
+    hdrs = ["debug_flags.h"],
 )

@@ -26,6 +26,8 @@ struct Chunk {
     void write_chunk(ConstRefT constant_ref, int line);
     int add_constant(Value value);
 
+    int get_line(int instruction);
+
     struct LineData {
         LineData();
 
@@ -43,6 +45,7 @@ struct Chunk {
 
     std::vector<InstructionData> code;
     std::vector<Value> constants;
-    // std::vector<int> lines;
+
+  private:
     LineData lines;
 };

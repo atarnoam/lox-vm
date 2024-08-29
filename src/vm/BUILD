@@ -26,3 +26,26 @@ cc_library(
         "@fmt",
     ],
 )
+
+cc_library(
+    name = "vm",
+    srcs = ["vm.cc"],
+    hdrs = ["vm.h"],
+    deps = [
+        ":chunk",
+        ":debug",
+        ":value",
+        "//src:debug_flags",
+    ],
+)
+
+cc_test(
+    name = "chunk_test",
+    size = "small",
+    srcs = ["chunk_test.cc"],
+    deps = [
+        ":chunk",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
+    ],
+)
