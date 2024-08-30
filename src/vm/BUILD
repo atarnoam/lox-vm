@@ -36,6 +36,7 @@ cc_library(
         ":debug",
         ":value",
         "//src:debug_flags",
+        "//src/compiler",
     ],
 )
 

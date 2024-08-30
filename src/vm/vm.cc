@@ -1,9 +1,12 @@
 #include "vm.h"
 
+#include "src/compiler/compiler.h"
 #include "src/debug_flags.h"
 #include "src/vm/debug.h"
 
-InterpretResult VM::interpret(Chunk &ch) {
+#include <optional>
+
+InterpretResult VM::run_chunk(Chunk &ch) {
     chunk = &ch;
     ip = ch.code.begin();
     return run();
@@ -56,6 +59,17 @@ Value VM::pop() {
     return popped;
 }
 
-InstructionData VM::read_byte() { return *(ip++); }
-
 Value VM::read_constant() { return chunk->constants[read_byte().constant_ref]; }
+
+InterpretResult interpret(VM &vm, const std::string &source) {
+    Compiler compiler(source);
+    std::optional<Chunk> chunk = compiler.compile();
+
+    if (!chunk.has_value()) {
+        return InterpretResult::COMPILE_ERROR;
+    }
+
+    InterpretResult result = vm.run_chunk(chunk.value());
+
+    return result;
+}

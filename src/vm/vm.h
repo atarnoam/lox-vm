@@ -10,14 +10,16 @@ enum struct InterpretResult { OK, COMPILE_ERROR, RUNTIME_ERROR };
 struct VM {
     VM() = default;
 
-    InterpretResult interpret(Chunk &chunk);
+    InterpretResult run_chunk(Chunk &chunk);
     InterpretResult run();
 
     void push(Value value);
     Value pop();
 
   private:
-    InstructionData read_byte();
+    __attribute__((always_inline)) InstructionData read_byte() {
+        return *(ip++);
+    }
     Value read_constant();
 
     template <typename FT, FT F>
@@ -31,3 +33,5 @@ struct VM {
     decltype(chunk->code)::const_iterator ip;
     std::vector<Value> stack;
 };
+
+InterpretResult interpret(VM &vm, const std::string &source);

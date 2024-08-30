@@ -3,27 +3,15 @@
 #include <fmt/format.h>
 
 Compiler::Compiler(const std::string &source)
-    : m_had_error(false), scanner(source) {}
+    : m_had_error(false), parser(source) {}
 
-Chunk Compiler::compile() {
-    int curr_line = -1;
-    for (;;) {
-        Token token = scanner.scan_token();
-        if (token.line != curr_line) {
-            std::cout << fmt::format("{:4d} ", token.line);
-            curr_line = token.line;
-        } else {
-            std::cout << "   | ";
-        }
-        std::cout << fmt::format("{:2d} '{}'\n", static_cast<int>(token.type),
-                                 token.lexeme);
-
-        if (token.type == TokenType::END_OF_FILE) {
-            break;
-        }
-    }
-
+std::optional<Chunk> Compiler::compile() {
+    parser.advance();
+    expression();
+    parser.consume(TokenType::END_OF_FILE, "Expect end of expression.");
     return Chunk();
 }
+
+void Compiler::expression() {}
 
 bool Compiler::had_error() const { return m_had_error; }

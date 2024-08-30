@@ -1,16 +1,20 @@
 #pragma once
 
-#include "src/syntactics/scanner.h"
+#include "src/syntactics/parser.h"
 #include "src/vm/chunk.h"
+
+#include <optional>
 
 struct Compiler {
     Compiler(const std::string &source);
 
-    Chunk compile();
+    std::optional<Chunk> compile();
+
+    void expression();
 
     bool had_error() const;
 
   private:
     bool m_had_error;
-    Scanner scanner;
+    Parser parser;
 };

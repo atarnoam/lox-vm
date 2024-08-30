@@ -8,20 +8,17 @@
 #include <optional>
 #include <sstream>
 
-int interpret(VM &vm, const std::string &source) {
-    Compiler compiler(source);
-    Chunk chunk = compiler.compile();
-
-    if (compiler.had_error()) {
+int interpret_result_to_exit_code(InterpretResult result) {
+    switch (result) {
+    case InterpretResult::COMPILE_ERROR:
         return 65;
+    case InterpretResult::RUNTIME_ERROR:
+        return 70;
+    case InterpretResult::OK:
+        return 0;
     }
-
-    // InterpretResult result = vm.interpret(chunk);
-    // if (result != InterpretResult::OK) {
-    //     return 70;
-    // }
-
-    return 0;
+    throw std::runtime_error(std::string(
+        "Unknown InterpretResult " + std::to_string(static_cast<int>(result))));
 }
 
 int repl() {
@@ -41,7 +38,8 @@ int run_file(char *filename) {
     VM vm;
     std::ifstream ifs(filename);
     std::string source(std::istreambuf_iterator<char>(ifs), {});
-    return interpret(vm, source);
+    InterpretResult result = interpret(vm, source);
+    return interpret_result_to_exit_code(result);
 }
 
 int main(int argc, char **argv) {

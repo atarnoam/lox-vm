@@ -16,3 +16,24 @@ cc_library(
         ":token",
     ],
 )
+
+cc_library(
+    name = "parser",
+    srcs = ["parser.cc"],
+    hdrs = ["parser.h"],
+    deps = [
+        ":logging",
+        ":scanner",
+        ":token",
+    ],
+)
+
+cc_library(
+    name = "logging",
+    srcs = ["logging.cc"],
+    hdrs = ["logging.h"],
+    deps = [
+        ":token",
+        "@fmt",
+    ],
+)
