@@ -31,20 +31,20 @@ int disassemble_instruction(Chunk &chunk, int offset) {
     }
     OpCode instruction = chunk.code[offset].opcode;
     switch (instruction) {
-    case OpCode::OP_RETURN:
-        return simple_instruction("OP_RETURN", offset);
-    case OpCode::OP_CONSTANT:
-        return constant_instruction("OP_CONSTANT", chunk, offset);
-    case OpCode::OP_ADD:
-        return simple_instruction("OP_ADD", offset);
-    case OpCode::OP_SUBTRACT:
-        return simple_instruction("OP_SUBTRACT", offset);
-    case OpCode::OP_MULTIPLY:
-        return simple_instruction("OP_MULTIPLY", offset);
-    case OpCode::OP_DIVIDE:
-        return simple_instruction("OP_DIVIDE", offset);
-    case OpCode::OP_NEGATE:
-        return simple_instruction("OP_NEGATE", offset);
+    case OpCode::RETURN:
+        return simple_instruction("RETURN", offset);
+    case OpCode::CONSTANT:
+        return constant_instruction("CONSTANT", chunk, offset);
+    case OpCode::ADD:
+        return simple_instruction("ADD", offset);
+    case OpCode::SUBTRACT:
+        return simple_instruction("SUBTRACT", offset);
+    case OpCode::MULTIPLY:
+        return simple_instruction("MULTIPLY", offset);
+    case OpCode::DIVIDE:
+        return simple_instruction("DIVIDE", offset);
+    case OpCode::NEGATE:
+        return simple_instruction("NEGATE", offset);
     default:
         std::cout << fmt::format("Unknown opcode {}\n",
                                  static_cast<int>(instruction));

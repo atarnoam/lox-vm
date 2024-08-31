@@ -25,26 +25,26 @@ InterpretResult VM::run() {
         OpCode instruction;
         // TODO: understand if functions here are inlined.
         switch (instruction = read_byte().opcode) {
-        case OpCode::OP_RETURN:
+        case OpCode::RETURN:
             std::cout << to_string(pop()) << "\n";
             return InterpretResult::OK;
-        case OpCode::OP_CONSTANT: {
+        case OpCode::CONSTANT: {
             Value constant = read_constant();
             push(constant);
         } break;
-        case OpCode::OP_ADD:
+        case OpCode::ADD:
             binary_func<std::plus<Value>, std::plus<Value>{}>();
             break;
-        case OpCode::OP_SUBTRACT:
+        case OpCode::SUBTRACT:
             binary_func<std::minus<Value>, std::minus<Value>{}>();
             break;
-        case OpCode::OP_MULTIPLY:
+        case OpCode::MULTIPLY:
             binary_func<std::multiplies<Value>, std::multiplies<Value>{}>();
             break;
-        case OpCode::OP_DIVIDE:
+        case OpCode::DIVIDE:
             binary_func<std::divides<Value>, std::divides<Value>{}>();
             break;
-        case OpCode::OP_NEGATE:
+        case OpCode::NEGATE:
             push(-pop());
             break;
         }

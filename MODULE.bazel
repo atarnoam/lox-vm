@@ -7,3 +7,4 @@
 
 bazel_dep(name = "fmt", version = "11.0.2")
 bazel_dep(name = "googletest", version = "1.15.2")
+bazel_dep(name = "magic_enum", version = "0.9.6")

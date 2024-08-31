@@ -7,13 +7,13 @@
 #include <vector>
 
 enum struct OpCode : int8_t {
-    OP_CONSTANT,
-    OP_ADD,
-    OP_SUBTRACT,
-    OP_MULTIPLY,
-    OP_DIVIDE,
-    OP_NEGATE,
-    OP_RETURN
+    CONSTANT,
+    ADD,
+    SUBTRACT,
+    MULTIPLY,
+    DIVIDE,
+    NEGATE,
+    RETURN
 };
 
 using ConstRefT = int8_t;
@@ -21,14 +21,15 @@ using ConstRefT = int8_t;
 union InstructionData {
     OpCode opcode;
     ConstRefT constant_ref;
+
+    InstructionData(OpCode opcode);
+    InstructionData(ConstRefT constant_ref);
 };
 
 struct Chunk {
     Chunk() = default;
 
-    void write_chunk(InstructionData instruction_data, int line);
-    void write_chunk(OpCode opcode, int line);
-    void write_chunk(ConstRefT constant_ref, int line);
+    void write(InstructionData instruction_data, int line);
     int add_constant(Value value);
 
     int get_line(int instruction);

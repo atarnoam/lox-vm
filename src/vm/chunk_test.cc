@@ -7,8 +7,8 @@ TEST(ChunkTests, TestLineData) {
     int const_ref = chunk.add_constant(1.2);
 
     for (int line = 1; line <= 10; ++line) {
-        chunk.write_chunk(OpCode::OP_CONSTANT, line);
-        chunk.write_chunk(const_ref, line);
+        chunk.write(OpCode::CONSTANT, line);
+        chunk.write(const_ref, line);
     }
 
     for (int instruction = 18; instruction >= 0; --instruction) {

@@ -130,7 +130,12 @@ char Scanner::peek_next() {
     return *(current + 1);
 }
 
-char Scanner::advance() { return *(current++); }
+char Scanner::advance() {
+    if (is_at_end()) {
+        return '\0';
+    }
+    return *(current++);
+}
 
 bool Scanner::match(char expected) {
     if (is_at_end())
@@ -168,7 +173,6 @@ Token Scanner::number() {
         while (isdigit(peek()))
             advance();
     }
-
     return make_token(TokenType::NUMBER);
 }
 

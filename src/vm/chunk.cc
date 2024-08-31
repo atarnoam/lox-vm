@@ -1,16 +1,8 @@
 #include "chunk.h"
 
-void Chunk::write_chunk(InstructionData instruction_data, int line) {
+void Chunk::write(InstructionData instruction_data, int line) {
     code.push_back(instruction_data);
     lines.add_line(line);
-}
-
-void Chunk::write_chunk(OpCode opcode, int line) {
-    write_chunk({.opcode = opcode}, line);
-}
-
-void Chunk::write_chunk(ConstRefT constant_ref, int line) {
-    write_chunk({.constant_ref = constant_ref}, line);
 }
 
 int Chunk::add_constant(Value value) {
@@ -70,3 +62,8 @@ int Chunk::LineData::get_line(int instruction) {
     }
     throw std::runtime_error("instruction not found");
 }
+
+InstructionData::InstructionData(OpCode opcode) : opcode(opcode) {}
+
+InstructionData::InstructionData(ConstRefT constant_ref)
+    : constant_ref(constant_ref) {}
