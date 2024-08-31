@@ -18,7 +18,7 @@ int simple_instruction(const std::string &name, int offset) {
 int constant_instruction(const std::string &name, Chunk &chunk, int offset) {
     ConstRefT constant = chunk.code[offset + 1].constant_ref;
     std::cout << fmt::format("{:16s} {:4d} '", name, constant);
-    std::cout << to_string(chunk.constants[constant]) << "'\n";
+    std::cout << chunk.constants[constant] << "'\n";
     return offset + 2;
 }
 
@@ -45,6 +45,12 @@ int disassemble_instruction(Chunk &chunk, int offset) {
         return simple_instruction("DIVIDE", offset);
     case OpCode::NEGATE:
         return simple_instruction("NEGATE", offset);
+    case OpCode::NIL:
+        return simple_instruction("NIL", offset);
+    case OpCode::TRUE:
+        return simple_instruction("TRUE", offset);
+    case OpCode::FALSE:
+        return simple_instruction("FALSE", offset);
     default:
         std::cout << fmt::format("Unknown opcode {}\n",
                                  static_cast<int>(instruction));

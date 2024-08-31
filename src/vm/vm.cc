@@ -18,40 +18,66 @@ InterpretResult VM::run() {
             disassemble_instruction(*chunk, ip - chunk->code.begin());
             std::cout << "          ";
             for (const auto &value : stack) {
-                std::cout << "[ " << to_string(value) << " ]";
+                std::cout << "[ " << value << " ]";
             }
             std::cout << "\n";
         }
         OpCode instruction;
         // TODO: understand if functions here are inlined.
         switch (instruction = read_byte().opcode) {
-        case OpCode::RETURN:
-            std::cout << to_string(pop()) << "\n";
+        case OpCode::RETURN: {
+            Value popped = pop();
+            std::cout << popped << "\n";
             return InterpretResult::OK;
+        }
         case OpCode::CONSTANT: {
             Value constant = read_constant();
             push(constant);
         } break;
         case OpCode::ADD:
-            binary_func<std::plus<Value>, std::plus<Value>{}>();
+            if (!assert_number(0, 1)) {
+                return InterpretResult::RUNTIME_ERROR;
+            }
+            binary_func<std::plus<double>, std::plus<double>{}>();
             break;
         case OpCode::SUBTRACT:
-            binary_func<std::minus<Value>, std::minus<Value>{}>();
+            if (!assert_number(0, 1)) {
+                return InterpretResult::RUNTIME_ERROR;
+            }
+            binary_func<std::minus<double>, std::minus<double>{}>();
             break;
         case OpCode::MULTIPLY:
-            binary_func<std::multiplies<Value>, std::multiplies<Value>{}>();
+            if (!assert_number(0, 1)) {
+                return InterpretResult::RUNTIME_ERROR;
+            }
+            binary_func<std::multiplies<double>, std::multiplies<double>{}>();
             break;
         case OpCode::DIVIDE:
-            binary_func<std::divides<Value>, std::divides<Value>{}>();
+            if (!assert_number(0, 1)) {
+                return InterpretResult::RUNTIME_ERROR;
+            }
+            binary_func<std::divides<double>, std::divides<double>{}>();
             break;
         case OpCode::NEGATE:
-            push(-pop());
+            if (!assert_number(0)) {
+                return InterpretResult::RUNTIME_ERROR;
+            }
+            emplace(-pop().as_number());
+            break;
+        case OpCode::NIL:
+            emplace();
+            break;
+        case OpCode::TRUE:
+            emplace(true);
+            break;
+        case OpCode::FALSE:
+            emplace(false);
             break;
         }
     }
 }
 
-void VM::push(Value value) { stack.push_back(value); }
+void VM::push(const Value &value) { stack.push_back(value); }
 
 Value VM::pop() {
     Value popped = stack.back();
@@ -59,7 +85,27 @@ Value VM::pop() {
     return popped;
 }
 
+Value VM::peek(int distance) const { return *(stack.rbegin() + distance); }
+
+void VM::reset_stack() { stack.resize(0); }
+
 Value VM::read_constant() { return chunk->constants[read_byte().constant_ref]; }
+
+bool VM::assert_number(int distance) {
+    if (!peek(distance).is_number()) {
+        runtime_error("Operand must be a number.");
+        return false;
+    }
+    return true;
+}
+
+bool VM::assert_number(int distance1, int distance2) {
+    if (!peek(distance1).is_number() or !peek(distance2).is_number()) {
+        runtime_error("Operands must be numbers.");
+        return false;
+    }
+    return true;
+}
 
 InterpretResult interpret(VM &vm, const std::string &source) {
     Compiler compiler(source);

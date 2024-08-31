@@ -8,6 +8,9 @@
 
 enum struct OpCode : int8_t {
     CONSTANT,
+    NIL,
+    TRUE,
+    FALSE,
     ADD,
     SUBTRACT,
     MULTIPLY,

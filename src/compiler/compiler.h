@@ -37,6 +37,7 @@ struct Compiler {
     void grouping();
     void unary();
     void binary();
+    void literal();
 
   private:
     Chunk &current_chunk();

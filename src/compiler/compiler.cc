@@ -82,6 +82,22 @@ void Compiler::binary() {
     }
 }
 
+void Compiler::literal() {
+    switch (parser.previous.type) {
+    case TokenType::FALSE:
+        emit(OpCode::FALSE);
+        break;
+    case TokenType::NIL:
+        emit(OpCode::NIL);
+        break;
+    case TokenType::TRUE:
+        emit(OpCode::TRUE);
+        break;
+    default:
+        return; // Unreachable
+    }
+}
+
 Chunk &Compiler::current_chunk() { return compiling_chunk; }
 
 void Compiler::end_compilation() {
@@ -183,18 +199,21 @@ constinit ParseRule rules[]{
     [static_cast<int>(TokenType::AND)] = {nullptr, nullptr, Precedence::NONE},
     [static_cast<int>(TokenType::CLASS)] = {nullptr, nullptr, Precedence::NONE},
     [static_cast<int>(TokenType::ELSE)] = {nullptr, nullptr, Precedence::NONE},
-    [static_cast<int>(TokenType::FALSE)] = {nullptr, nullptr, Precedence::NONE},
+    [static_cast<int>(TokenType::FALSE)] = {&Compiler::literal, nullptr,
+                                            Precedence::NONE},
     [static_cast<int>(TokenType::FOR)] = {nullptr, nullptr, Precedence::NONE},
     [static_cast<int>(TokenType::FUN)] = {nullptr, nullptr, Precedence::NONE},
     [static_cast<int>(TokenType::IF)] = {nullptr, nullptr, Precedence::NONE},
-    [static_cast<int>(TokenType::NIL)] = {nullptr, nullptr, Precedence::NONE},
+    [static_cast<int>(TokenType::NIL)] = {&Compiler::literal, nullptr,
+                                          Precedence::NONE},
     [static_cast<int>(TokenType::OR)] = {nullptr, nullptr, Precedence::NONE},
     [static_cast<int>(TokenType::PRINT)] = {nullptr, nullptr, Precedence::NONE},
     [static_cast<int>(TokenType::RETURN)] = {nullptr, nullptr,
                                              Precedence::NONE},
     [static_cast<int>(TokenType::SUPER)] = {nullptr, nullptr, Precedence::NONE},
     [static_cast<int>(TokenType::THIS)] = {nullptr, nullptr, Precedence::NONE},
-    [static_cast<int>(TokenType::TRUE)] = {nullptr, nullptr, Precedence::NONE},
+    [static_cast<int>(TokenType::TRUE)] = {&Compiler::literal, nullptr,
+                                           Precedence::NONE},
     [static_cast<int>(TokenType::VAR)] = {nullptr, nullptr, Precedence::NONE},
     [static_cast<int>(TokenType::WHILE)] = {nullptr, nullptr, Precedence::NONE},
     [static_cast<int>(TokenType::END_OF_FILE)] = {nullptr, nullptr,

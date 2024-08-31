@@ -59,8 +59,6 @@ enum class TokenType {
 struct Token {
     Token(TokenType type, std::string_view lexeme, int line);
 
-    std::string literal_to_string() const;
-
     TokenType type;
     std::string_view lexeme;
     int line;

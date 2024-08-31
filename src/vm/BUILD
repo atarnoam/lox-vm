@@ -37,6 +37,7 @@ cc_library(
         ":value",
         "//src:debug_flags",
         "//src/compiler",
+        "@fmt",
     ],
 )
 
