@@ -54,6 +54,9 @@ void Compiler::unary() {
     case TokenType::MINUS:
         emit(OpCode::NEGATE);
         break;
+    case TokenType::BANG:
+        emit(OpCode::NOT);
+        break;
     default:
         return; // Unreachable.
     }
@@ -65,6 +68,25 @@ void Compiler::binary() {
     parse_precedence(rule.precedence + 1);
 
     switch (operator_type) {
+    case TokenType::BANG_EQUAL:
+        emit(OpCode::EQUAL, OpCode::NOT);
+        break;
+    case TokenType::EQUAL_EQUAL:
+        emit(OpCode::EQUAL);
+        break;
+    case TokenType::GREATER:
+        emit(OpCode::GREATER);
+        break;
+    case TokenType::GREATER_EQUAL:
+        emit(OpCode::LESS, OpCode::NOT);
+        break;
+    case TokenType::LESS:
+        emit(OpCode::LESS);
+        break;
+    case TokenType::LESS_EQUAL:
+        emit(OpCode::GREATER, OpCode::NOT);
+        break;
+
     case TokenType::PLUS:
         emit(OpCode::ADD);
         break;
@@ -157,66 +179,48 @@ ParseRule &get_rule(TokenType token_type) {
 }
 
 constinit ParseRule rules[]{
-    [static_cast<int>(TokenType::LEFT_PAREN)] = {&Compiler::grouping, nullptr,
-                                                 Precedence::NONE},
-    [static_cast<int>(TokenType::RIGHT_PAREN)] = {nullptr, nullptr,
-                                                  Precedence::NONE},
-    [static_cast<int>(TokenType::LEFT_BRACE)] = {nullptr, nullptr,
-                                                 Precedence::NONE},
-    [static_cast<int>(TokenType::RIGHT_BRACE)] = {nullptr, nullptr,
-                                                  Precedence::NONE},
-    [static_cast<int>(TokenType::COMMA)] = {nullptr, nullptr, Precedence::NONE},
-    [static_cast<int>(TokenType::DOT)] = {nullptr, nullptr, Precedence::NONE},
-    [static_cast<int>(TokenType::MINUS)] = {&Compiler::unary, &Compiler::binary,
-                                            Precedence::TERM},
-    [static_cast<int>(TokenType::PLUS)] = {nullptr, &Compiler::binary,
-                                           Precedence::TERM},
-    [static_cast<int>(TokenType::SEMICOLON)] = {nullptr, nullptr,
-                                                Precedence::NONE},
-    [static_cast<int>(TokenType::SLASH)] = {nullptr, &Compiler::binary,
-                                            Precedence::FACTOR},
-    [static_cast<int>(TokenType::STAR)] = {nullptr, &Compiler::binary,
-                                           Precedence::FACTOR},
-    [static_cast<int>(TokenType::BANG)] = {nullptr, nullptr, Precedence::NONE},
-    [static_cast<int>(TokenType::BANG_EQUAL)] = {nullptr, nullptr,
-                                                 Precedence::NONE},
-    [static_cast<int>(TokenType::EQUAL)] = {nullptr, nullptr, Precedence::NONE},
-    [static_cast<int>(TokenType::EQUAL_EQUAL)] = {nullptr, nullptr,
-                                                  Precedence::NONE},
-    [static_cast<int>(TokenType::GREATER)] = {nullptr, nullptr,
-                                              Precedence::NONE},
-    [static_cast<int>(TokenType::GREATER_EQUAL)] = {nullptr, nullptr,
-                                                    Precedence::NONE},
-    [static_cast<int>(TokenType::LESS)] = {nullptr, nullptr, Precedence::NONE},
-    [static_cast<int>(TokenType::LESS_EQUAL)] = {nullptr, nullptr,
-                                                 Precedence::NONE},
-    [static_cast<int>(TokenType::IDENTIFIER)] = {nullptr, nullptr,
-                                                 Precedence::NONE},
-    [static_cast<int>(TokenType::STRING)] = {nullptr, nullptr,
-                                             Precedence::NONE},
-    [static_cast<int>(TokenType::NUMBER)] = {&Compiler::number, nullptr,
-                                             Precedence::NONE},
-    [static_cast<int>(TokenType::AND)] = {nullptr, nullptr, Precedence::NONE},
-    [static_cast<int>(TokenType::CLASS)] = {nullptr, nullptr, Precedence::NONE},
-    [static_cast<int>(TokenType::ELSE)] = {nullptr, nullptr, Precedence::NONE},
-    [static_cast<int>(TokenType::FALSE)] = {&Compiler::literal, nullptr,
-                                            Precedence::NONE},
-    [static_cast<int>(TokenType::FOR)] = {nullptr, nullptr, Precedence::NONE},
-    [static_cast<int>(TokenType::FUN)] = {nullptr, nullptr, Precedence::NONE},
-    [static_cast<int>(TokenType::IF)] = {nullptr, nullptr, Precedence::NONE},
-    [static_cast<int>(TokenType::NIL)] = {&Compiler::literal, nullptr,
-                                          Precedence::NONE},
-    [static_cast<int>(TokenType::OR)] = {nullptr, nullptr, Precedence::NONE},
-    [static_cast<int>(TokenType::PRINT)] = {nullptr, nullptr, Precedence::NONE},
-    [static_cast<int>(TokenType::RETURN)] = {nullptr, nullptr,
-                                             Precedence::NONE},
-    [static_cast<int>(TokenType::SUPER)] = {nullptr, nullptr, Precedence::NONE},
-    [static_cast<int>(TokenType::THIS)] = {nullptr, nullptr, Precedence::NONE},
-    [static_cast<int>(TokenType::TRUE)] = {&Compiler::literal, nullptr,
-                                           Precedence::NONE},
-    [static_cast<int>(TokenType::VAR)] = {nullptr, nullptr, Precedence::NONE},
-    [static_cast<int>(TokenType::WHILE)] = {nullptr, nullptr, Precedence::NONE},
-    [static_cast<int>(TokenType::END_OF_FILE)] = {nullptr, nullptr,
-                                                  Precedence::NONE},
-    [static_cast<int>(TokenType::ERROR)] = {nullptr, nullptr, Precedence::NONE},
+#define TOKEN(x) static_cast<int>((TokenType::x))
+#define FUNC(f) &Compiler::f
+    [TOKEN(LEFT_PAREN)] = {FUNC(grouping), nullptr, Precedence::NONE},
+    [TOKEN(RIGHT_PAREN)] = {nullptr, nullptr, Precedence::NONE},
+    [TOKEN(LEFT_BRACE)] = {nullptr, nullptr, Precedence::NONE},
+    [TOKEN(RIGHT_BRACE)] = {nullptr, nullptr, Precedence::NONE},
+    [TOKEN(COMMA)] = {nullptr, nullptr, Precedence::NONE},
+    [TOKEN(DOT)] = {nullptr, nullptr, Precedence::NONE},
+    [TOKEN(MINUS)] = {FUNC(unary), FUNC(binary), Precedence::TERM},
+    [TOKEN(PLUS)] = {nullptr, FUNC(binary), Precedence::TERM},
+    [TOKEN(SEMICOLON)] = {nullptr, nullptr, Precedence::NONE},
+    [TOKEN(SLASH)] = {nullptr, FUNC(binary), Precedence::FACTOR},
+    [TOKEN(STAR)] = {nullptr, FUNC(binary), Precedence::FACTOR},
+    [TOKEN(BANG)] = {FUNC(unary), nullptr, Precedence::NONE},
+    [TOKEN(BANG_EQUAL)] = {nullptr, FUNC(binary), Precedence::EQUALITY},
+    [TOKEN(EQUAL)] = {nullptr, nullptr, Precedence::NONE},
+    [TOKEN(EQUAL_EQUAL)] = {nullptr, FUNC(binary), Precedence::EQUALITY},
+    [TOKEN(GREATER)] = {nullptr, FUNC(binary), Precedence::COMPARISON},
+    [TOKEN(GREATER_EQUAL)] = {nullptr, FUNC(binary), Precedence::COMPARISON},
+    [TOKEN(LESS)] = {nullptr, FUNC(binary), Precedence::COMPARISON},
+    [TOKEN(LESS_EQUAL)] = {nullptr, FUNC(binary), Precedence::COMPARISON},
+    [TOKEN(IDENTIFIER)] = {nullptr, nullptr, Precedence::NONE},
+    [TOKEN(STRING)] = {nullptr, nullptr, Precedence::NONE},
+    [TOKEN(NUMBER)] = {FUNC(number), nullptr, Precedence::NONE},
+    [TOKEN(AND)] = {nullptr, nullptr, Precedence::NONE},
+    [TOKEN(CLASS)] = {nullptr, nullptr, Precedence::NONE},
+    [TOKEN(ELSE)] = {nullptr, nullptr, Precedence::NONE},
+    [TOKEN(FALSE)] = {FUNC(literal), nullptr, Precedence::NONE},
+    [TOKEN(FOR)] = {nullptr, nullptr, Precedence::NONE},
+    [TOKEN(FUN)] = {nullptr, nullptr, Precedence::NONE},
+    [TOKEN(IF)] = {nullptr, nullptr, Precedence::NONE},
+    [TOKEN(NIL)] = {FUNC(literal), nullptr, Precedence::NONE},
+    [TOKEN(OR)] = {nullptr, nullptr, Precedence::NONE},
+    [TOKEN(PRINT)] = {nullptr, nullptr, Precedence::NONE},
+    [TOKEN(RETURN)] = {nullptr, nullptr, Precedence::NONE},
+    [TOKEN(SUPER)] = {nullptr, nullptr, Precedence::NONE},
+    [TOKEN(THIS)] = {nullptr, nullptr, Precedence::NONE},
+    [TOKEN(TRUE)] = {FUNC(literal), nullptr, Precedence::NONE},
+    [TOKEN(VAR)] = {nullptr, nullptr, Precedence::NONE},
+    [TOKEN(WHILE)] = {nullptr, nullptr, Precedence::NONE},
+    [TOKEN(END_OF_FILE)] = {nullptr, nullptr, Precedence::NONE},
+    [TOKEN(ERROR)] = {nullptr, nullptr, Precedence::NONE},
+#undef FUNC
+#undef TOKEN
 };

@@ -43,6 +43,8 @@ int disassemble_instruction(Chunk &chunk, int offset) {
         return simple_instruction("MULTIPLY", offset);
     case OpCode::DIVIDE:
         return simple_instruction("DIVIDE", offset);
+    case OpCode::NOT:
+        return simple_instruction("NOT", offset);
     case OpCode::NEGATE:
         return simple_instruction("NEGATE", offset);
     case OpCode::NIL:
@@ -51,6 +53,12 @@ int disassemble_instruction(Chunk &chunk, int offset) {
         return simple_instruction("TRUE", offset);
     case OpCode::FALSE:
         return simple_instruction("FALSE", offset);
+    case OpCode::EQUAL:
+        return simple_instruction("EQUAL", offset);
+    case OpCode::GREATER:
+        return simple_instruction("GREATER", offset);
+    case OpCode::LESS:
+        return simple_instruction("LESS", offset);
     default:
         std::cout << fmt::format("Unknown opcode {}\n",
                                  static_cast<int>(instruction));

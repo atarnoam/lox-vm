@@ -11,10 +11,14 @@ enum struct OpCode : int8_t {
     NIL,
     TRUE,
     FALSE,
+    EQUAL,
+    GREATER,
+    LESS,
     ADD,
     SUBTRACT,
     MULTIPLY,
     DIVIDE,
+    NOT,
     NEGATE,
     RETURN
 };

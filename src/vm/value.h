@@ -22,6 +22,11 @@ struct Value {
     bool is_nil() const;
     bool is_number() const;
 
+    /// @brief The only false types are nil and "false".
+    operator bool() const;
+
+    bool operator==(const Value &other) const;
+
   private:
     ValueType m_type;
     union ValueU {

@@ -31,14 +31,11 @@ struct VM {
     }
     Value read_constant();
 
-    bool assert_number(int distance);
-    bool assert_number(int distance1, int distance2);
-
-    template <typename FT, FT F>
+    template <typename T, template <typename S> typename FT>
     void binary_func() {
-        double b = pop().as_number();
-        double a = pop().as_number();
-        push(F(a, b));
+        T b = pop().as_number();
+        T a = pop().as_number();
+        emplace(FT{}(a, b));
     }
 
     template <typename... Args>
@@ -46,7 +43,7 @@ struct VM {
         std::cerr << fmt::format(fmt, std::forward<Args>(args)...) << '\n';
         int instruction = ip - chunk->code.begin() - 1;
         int line = chunk->get_line(instruction);
-        std::cerr << fmt::format("[line {}] in script", line) << std::endl;
+        std::cerr << fmt::format("[line {}] in script.", line) << std::endl;
         reset_stack();
     };
 

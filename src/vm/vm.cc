@@ -13,6 +13,17 @@ InterpretResult VM::run_chunk(Chunk &ch) {
 }
 
 InterpretResult VM::run() {
+#define ASSERT_NUM()                                                           \
+    if (!peek(0).is_number()) {                                                \
+        runtime_error("Operand must be a number.");                            \
+        return InterpretResult::RUNTIME_ERROR;                                 \
+    }
+#define ASSERT_NUMS()                                                          \
+    if (!peek(0).is_number() || !peek(1).is_number()) {                        \
+        runtime_error("Operands must be numbers.");                            \
+        return InterpretResult::RUNTIME_ERROR;                                 \
+    }
+
     for (;;) {
         if constexpr (DEBUG_TRACE_EXECEUTION) {
             disassemble_instruction(*chunk, ip - chunk->code.begin());
@@ -34,34 +45,40 @@ InterpretResult VM::run() {
             Value constant = read_constant();
             push(constant);
         } break;
+        case OpCode::EQUAL: {
+            Value b = pop();
+            Value a = pop();
+            emplace(a == b);
+        } break;
+        case OpCode::GREATER:
+            ASSERT_NUMS();
+            binary_func<double, std::greater>();
+            break;
+        case OpCode::LESS:
+            ASSERT_NUMS();
+            binary_func<double, std::less>();
+            break;
         case OpCode::ADD:
-            if (!assert_number(0, 1)) {
-                return InterpretResult::RUNTIME_ERROR;
-            }
-            binary_func<std::plus<double>, std::plus<double>{}>();
+            ASSERT_NUMS();
+            binary_func<double, std::plus>();
             break;
         case OpCode::SUBTRACT:
-            if (!assert_number(0, 1)) {
-                return InterpretResult::RUNTIME_ERROR;
-            }
-            binary_func<std::minus<double>, std::minus<double>{}>();
+            ASSERT_NUMS();
+            binary_func<double, std::minus>();
             break;
         case OpCode::MULTIPLY:
-            if (!assert_number(0, 1)) {
-                return InterpretResult::RUNTIME_ERROR;
-            }
-            binary_func<std::multiplies<double>, std::multiplies<double>{}>();
+            ASSERT_NUMS();
+            binary_func<double, std::multiplies>();
             break;
         case OpCode::DIVIDE:
-            if (!assert_number(0, 1)) {
-                return InterpretResult::RUNTIME_ERROR;
-            }
-            binary_func<std::divides<double>, std::divides<double>{}>();
+            ASSERT_NUMS();
+            binary_func<double, std::divides>();
+            break;
+        case OpCode::NOT:
+            emplace(!static_cast<bool>(pop()));
             break;
         case OpCode::NEGATE:
-            if (!assert_number(0)) {
-                return InterpretResult::RUNTIME_ERROR;
-            }
+            ASSERT_NUM();
             emplace(-pop().as_number());
             break;
         case OpCode::NIL:
@@ -75,6 +92,8 @@ InterpretResult VM::run() {
             break;
         }
     }
+#undef ASSERT_NUM
+#undef ASSERT_NUMS
 }
 
 void VM::push(const Value &value) { stack.push_back(value); }
@@ -90,22 +109,6 @@ Value VM::peek(int distance) const { return *(stack.rbegin() + distance); }
 void VM::reset_stack() { stack.resize(0); }
 
 Value VM::read_constant() { return chunk->constants[read_byte().constant_ref]; }
-
-bool VM::assert_number(int distance) {
-    if (!peek(distance).is_number()) {
-        runtime_error("Operand must be a number.");
-        return false;
-    }
-    return true;
-}
-
-bool VM::assert_number(int distance1, int distance2) {
-    if (!peek(distance1).is_number() or !peek(distance2).is_number()) {
-        runtime_error("Operands must be numbers.");
-        return false;
-    }
-    return true;
-}
 
 InterpretResult interpret(VM &vm, const std::string &source) {
     Compiler compiler(source);
