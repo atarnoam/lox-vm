@@ -30,8 +30,8 @@ struct heap_ptr {
     heap_ptr(HeapObj<T> *ptr) : ptr(ptr) {}
     heap_ptr(nullptr_t) : ptr(nullptr) {}
 
-    const T &operator*() const;
-    // T &operator*() { return ptr->obj; }
+    const T &operator*() const { return ptr->obj; };
+    T &operator*() { return ptr->obj; }
     const T *operator->() const { return &(ptr->obj); }
     T *operator->() { return &(ptr->obj); }
 
@@ -41,8 +41,3 @@ struct heap_ptr {
   private:
     HeapObj<T> *ptr;
 };
-
-template <typename T>
-inline const T &heap_ptr<T>::operator*() const {
-    return ptr->obj;
-}
