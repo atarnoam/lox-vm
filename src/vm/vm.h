@@ -1,10 +1,15 @@
 #pragma once
 
 #include "src/vm/chunk.h"
+#include "src/vm/gc/heap.h"
+#include "src/vm/gc/heap_obj.h"
+#include "src/vm/obj_string.h"
 #include "src/vm/value.h"
 
 #include <fmt/format.h>
 #include <functional>
+#include <unordered_map>
+#include <unordered_set>
 #include <utility>
 
 enum struct InterpretResult { OK, COMPILE_ERROR, RUNTIME_ERROR };
@@ -47,9 +52,11 @@ struct VM {
         reset_stack();
     };
 
+    Heap heap;
     Chunk *chunk;
     decltype(chunk->code)::const_iterator ip;
     std::vector<Value> stack;
+    StringSet strings;
 };
 
 InterpretResult interpret(VM &vm, const std::string &source);

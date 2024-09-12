@@ -1,5 +1,6 @@
 {
     "files.associations": {
+        "*.sage": "python",
         "cctype": "cpp",
         "clocale": "cpp",
         "cmath": "cpp",
@@ -70,6 +71,11 @@
         "typeindex": "cpp",
         "typeinfo": "cpp",
         "variant": "cpp",
-        "charconv": "cpp"
-    }
+        "charconv": "cpp",
+        "unordered_set": "cpp",
+        "csignal": "cpp",
+        "forward_list": "cpp",
+        "span": "cpp"
+    },
+    "C_Cpp.errorSquiggles": "enabled"
 }

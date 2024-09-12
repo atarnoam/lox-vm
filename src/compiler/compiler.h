@@ -26,7 +26,6 @@ enum struct Precedence {
 Precedence operator+(Precedence precedence, int other);
 
 struct Compiler {
-
     Compiler(const std::string &source);
 
     std::optional<Chunk> compile();
@@ -38,6 +37,7 @@ struct Compiler {
     void unary();
     void binary();
     void literal();
+    void string();
 
   private:
     Chunk &current_chunk();

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "src/debug_flags.h"
+
 #include <cstddef>
 #include <utility>
 
@@ -35,9 +37,17 @@ struct heap_ptr {
     const T *operator->() const { return &(ptr->obj); }
     T *operator->() { return &(ptr->obj); }
 
+    bool operator==(heap_ptr<T> other) { return ptr == other.ptr; }
+
     // Note we don't delete ptr here.
     ~heap_ptr() = default;
+
+  protected:
+    operator HeapObj<T> *() { return ptr; }
 
   private:
     HeapObj<T> *ptr;
 };
+
+// if debug flag is on, asserts that sizeof(heap_ptr) == sizeof(void*)
+void debug_test_size_heap_ptr();

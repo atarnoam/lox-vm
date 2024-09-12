@@ -1,10 +1,19 @@
 package(default_visibility = ["//visibility:public"])
 
 cc_library(
+    name = "code",
+    srcs = ["code.cc"],
+    hdrs = ["code.h"],
+)
+
+cc_library(
     name = "chunk",
     srcs = ["chunk.cc"],
     hdrs = ["chunk.h"],
-    deps = [":value"],
+    deps = [
+        ":code",
+        ":value",
+    ],
 )
 
 cc_library(
@@ -23,6 +32,8 @@ cc_library(
     srcs = ["value.cc"],
     hdrs = ["value.h"],
     deps = [
+        "//src/vm:obj_string",
+        "//src/vm/gc:heap_obj",
         "@fmt",
     ],
 )
@@ -34,9 +45,12 @@ cc_library(
     deps = [
         ":chunk",
         ":debug",
+        ":obj_string",
         ":value",
         "//src:debug_flags",
         "//src/compiler",
+        "//src/vm/gc:heap",
+        "//src/vm/gc:heap_obj",
         "@fmt",
     ],
 )
@@ -49,5 +63,13 @@ cc_test(
         ":chunk",
         "@googletest//:gtest",
         "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "obj_string",
+    srcs = ["obj_string.cc"],
+    hdrs = ["obj_string.h"],
+    deps = [
     ],
 )

@@ -120,6 +120,12 @@ void Compiler::literal() {
     }
 }
 
+// void Compiler::string() {
+//     emit_constant(
+
+//     );
+// }
+
 Chunk &Compiler::current_chunk() { return compiling_chunk; }
 
 void Compiler::end_compilation() {
@@ -201,7 +207,7 @@ constinit ParseRule rules[]{
     [TOKEN(LESS)] = {nullptr, FUNC(binary), Precedence::COMPARISON},
     [TOKEN(LESS_EQUAL)] = {nullptr, FUNC(binary), Precedence::COMPARISON},
     [TOKEN(IDENTIFIER)] = {nullptr, nullptr, Precedence::NONE},
-    [TOKEN(STRING)] = {nullptr, nullptr, Precedence::NONE},
+    [TOKEN(STRING)] = {FUNC(string), nullptr, Precedence::NONE},
     [TOKEN(NUMBER)] = {FUNC(number), nullptr, Precedence::NONE},
     [TOKEN(AND)] = {nullptr, nullptr, Precedence::NONE},
     [TOKEN(CLASS)] = {nullptr, nullptr, Precedence::NONE},

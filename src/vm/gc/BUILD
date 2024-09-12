@@ -11,7 +11,7 @@ cc_library(
     name = "heap_obj",
     srcs = ["heap_obj.cc"],
     hdrs = ["heap_obj.h"],
-    deps = [],
+    deps = ["//src:debug_flags"],
 )
 
 cc_test(
