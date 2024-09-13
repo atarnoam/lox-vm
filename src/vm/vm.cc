@@ -37,13 +37,16 @@ InterpretResult VM::run() {
         // TODO: understand if functions here are inlined.
         switch (instruction = read_byte().opcode) {
         case OpCode::RETURN: {
-            Value popped = pop();
-            std::cout << popped << "\n";
             return InterpretResult::OK;
         }
         case OpCode::CONSTANT: {
             Value constant = read_constant();
             push(constant);
+        } break;
+        case OpCode::DEFINE_GLOBAL: {
+            auto name = read_constant().as_string();
+            globals.emplace(name, peek(0));
+            pop();
         } break;
         case OpCode::EQUAL: {
             Value b = pop();
@@ -86,6 +89,12 @@ InterpretResult VM::run() {
         case OpCode::NEGATE:
             ASSERT_NUM();
             emplace(-pop().as_number());
+            break;
+        case OpCode::PRINT:
+            std::cout << pop() << "\n";
+            break;
+        case OpCode::POP:
+            pop();
             break;
         case OpCode::NIL:
             emplace();

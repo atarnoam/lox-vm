@@ -61,6 +61,7 @@ struct VM {
     };
 
     HeapManager heap_manager;
+    VariableMap globals;
     Chunk *chunk;
     decltype(chunk->code)::const_iterator ip;
     std::vector<Value> stack;

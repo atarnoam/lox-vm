@@ -4,7 +4,7 @@
 
 InstructionData::InstructionData(OpCode opcode) : opcode(opcode) {}
 
-InstructionData::InstructionData(ConstRefT constant_ref)
+InstructionData::InstructionData(const_ref_t constant_ref)
     : constant_ref(constant_ref) {}
 
 void CodeChunk::write(InstructionData instruction_data, int line) {

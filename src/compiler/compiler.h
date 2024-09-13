@@ -32,7 +32,15 @@ struct Compiler {
     std::optional<Chunk> compile();
 
     void expression();
+    void statement();
+    void declaration();
 
+    // Statements
+    void print_statement();
+    void expression_statement();
+    void var_declaration();
+
+    // Expressions
     void number();
     void grouping();
     void unary();
@@ -41,6 +49,9 @@ struct Compiler {
     void string();
 
   private:
+    const_ref_t parse_variable(const std::string &error_message);
+    void define_variable(const_ref_t global);
+
     Chunk &current_chunk();
 
     void end_compilation();
@@ -51,7 +62,8 @@ struct Compiler {
     void emit_return();
     void emit_constant(Value value);
 
-    ConstRefT make_constant(Value value);
+    const_ref_t make_constant(Value value);
+    const_ref_t identifier_constant(const Token &name);
 
     void parse_precedence(Precedence precedence);
 

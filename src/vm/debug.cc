@@ -16,7 +16,7 @@ int simple_instruction(const std::string &name, int offset) {
 }
 
 int constant_instruction(const std::string &name, Chunk &chunk, int offset) {
-    ConstRefT constant = chunk.code[offset + 1].constant_ref;
+    const_ref_t constant = chunk.code[offset + 1].constant_ref;
     std::cout << fmt::format("{:16s} {:4d} '", name, constant);
     std::cout << chunk.constants[constant] << "'\n";
     return offset + 2;
@@ -35,6 +35,8 @@ int disassemble_instruction(Chunk &chunk, int offset) {
         return simple_instruction("RETURN", offset);
     case OpCode::CONSTANT:
         return constant_instruction("CONSTANT", chunk, offset);
+    case OpCode::DEFINE_GLOBAL:
+        return constant_instruction("DEFINE_CONSTANT", chunk, offset);
     case OpCode::ADD:
         return simple_instruction("ADD", offset);
     case OpCode::SUBTRACT:
@@ -59,6 +61,10 @@ int disassemble_instruction(Chunk &chunk, int offset) {
         return simple_instruction("GREATER", offset);
     case OpCode::LESS:
         return simple_instruction("LESS", offset);
+    case OpCode::POP:
+        return simple_instruction("POP", offset);
+    case OpCode::PRINT:
+        return simple_instruction("PRINT", offset);
     default:
         std::cout << fmt::format("Unknown opcode {}\n",
                                  static_cast<int>(instruction));

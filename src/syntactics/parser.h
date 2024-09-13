@@ -16,12 +16,17 @@ struct Parser {
     Token previous;
 
     void advance();
-    void consume(TokenType type, const std::string_view &message);
+    void consume(TokenType type, const std::string &message);
+    bool match(TokenType type);
+    bool check(TokenType type);
 
     bool had_error() const;
+    bool panic_mode() const;
 
     void error(const std::string_view &message);
     void error_at_current(const std::string_view &message);
+
+    void synchronize();
 
   private:
     void error_at(const Token &token, const std::string_view &message);
@@ -29,5 +34,5 @@ struct Parser {
     Scanner scanner;
 
     bool m_had_error;
-    bool panic_mode;
+    bool m_panic_mode;
 };

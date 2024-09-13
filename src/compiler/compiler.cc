@@ -19,10 +19,15 @@ Compiler::Compiler(HeapManager &heap_manager, const std::string &source)
 
 std::optional<Chunk> Compiler::compile() {
     parser.advance();
-    expression();
-    parser.consume(TokenType::END_OF_FILE, "Expect end of expression.");
-    end_compilation();
+    while (!parser.match(TokenType::END_OF_FILE)) {
+        declaration();
 
+        if (parser.panic_mode()) {
+            parser.synchronize();
+        }
+    }
+
+    end_compilation();
     if (parser.had_error()) {
         return std::nullopt;
     }
@@ -30,6 +35,48 @@ std::optional<Chunk> Compiler::compile() {
 }
 
 void Compiler::expression() { parse_precedence(Precedence::ASSIGNMENT); }
+
+void Compiler::statement() {
+    if (parser.match(TokenType::PRINT)) {
+        print_statement();
+    } else {
+        expression_statement();
+    }
+}
+
+void Compiler::declaration() {
+    if (parser.match(TokenType::VAR)) {
+        var_declaration();
+    } else {
+        statement();
+    }
+}
+
+void Compiler::print_statement() {
+    expression();
+    parser.consume(TokenType::SEMICOLON, "Expect ';' after value.");
+    emit(OpCode::PRINT);
+}
+
+void Compiler::expression_statement() {
+    expression();
+    parser.consume(TokenType::SEMICOLON, "Expect ';' after expression.");
+    emit(OpCode::POP);
+}
+
+void Compiler::var_declaration() {
+    const_ref_t global = parse_variable("Expect variable name.");
+
+    if (parser.match(TokenType::EQUAL)) {
+        expression();
+    } else {
+        emit(OpCode::NIL);
+    }
+    parser.consume(TokenType::SEMICOLON,
+                   "Expect ';' after variable declaration.");
+
+    define_variable(global);
+}
 
 void Compiler::number() {
     double value;
@@ -125,6 +172,15 @@ void Compiler::string() {
     emit_constant(heap_manager.initialize(lexeme.substr(1, lexeme.size() - 2)));
 }
 
+const_ref_t Compiler::parse_variable(const std::string &error_message) {
+    parser.consume(TokenType::IDENTIFIER, error_message);
+    return identifier_constant(parser.previous);
+}
+
+void Compiler::define_variable(const_ref_t global) {
+    emit(OpCode::DEFINE_GLOBAL, global);
+}
+
 Chunk &Compiler::current_chunk() { return compiling_chunk; }
 
 void Compiler::end_compilation() {
@@ -151,15 +207,19 @@ void Compiler::emit_constant(Value value) {
     emit(OpCode::CONSTANT, make_constant(value));
 }
 
-ConstRefT Compiler::make_constant(Value value) {
+const_ref_t Compiler::make_constant(Value value) {
     int constant_ref = current_chunk().add_constant(value);
-    if (constant_ref > std::numeric_limits<ConstRefT>::max()) {
+    if (constant_ref > std::numeric_limits<const_ref_t>::max()) {
         // Not really a parser error, but we use the parser for bookkeeping
         // errors.
         parser.error("Too many constants in one chunk.");
         return 0;
     }
     return constant_ref;
+}
+
+const_ref_t Compiler::identifier_constant(const Token &name) {
+    return make_constant(heap_manager.initialize(name.lexeme));
 }
 
 void Compiler::parse_precedence(Precedence precedence) {

@@ -16,5 +16,5 @@ struct HeapManager {
 
   private:
     Heap heap;
-    StringSet strings;
+    StringMap strings;
 };

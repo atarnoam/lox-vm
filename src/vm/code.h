@@ -12,6 +12,7 @@ enum struct OpCode : int8_t {
     TRUE,
     FALSE,
     EQUAL,
+    DEFINE_GLOBAL,
     GREATER,
     LESS,
     ADD,
@@ -20,17 +21,19 @@ enum struct OpCode : int8_t {
     DIVIDE,
     NOT,
     NEGATE,
+    POP,
+    PRINT,
     RETURN
 };
 
-using ConstRefT = int8_t;
+using const_ref_t = int8_t;
 
 union InstructionData {
     OpCode opcode;
-    ConstRefT constant_ref;
+    const_ref_t constant_ref;
 
     InstructionData(OpCode opcode);
-    InstructionData(ConstRefT constant_ref);
+    InstructionData(const_ref_t constant_ref);
 };
 
 /** A code chunk is a chunk that holds just code, and the line numbers they came

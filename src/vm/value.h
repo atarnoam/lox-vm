@@ -70,5 +70,9 @@ constinit inline auto STRING_EQ = [](heap_ptr<ObjString> string1,
 };
 
 /** Used for string interning. */
-using StringSet = std::unordered_map<std::string, heap_ptr<ObjString>,
+using StringMap = std::unordered_map<std::string, heap_ptr<ObjString>,
                                      decltype(obj_string::hash_func)>;
+
+using VariableMap =
+    std::unordered_map<heap_ptr<ObjString>, Value, decltype(STRING_HASH),
+                       decltype(STRING_EQ)>;
