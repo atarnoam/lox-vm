@@ -50,6 +50,14 @@ InterpretResult VM::run() {
             globals.emplace(name, peek(0));
             pop();
         } break;
+        case OpCode::GET_LOCAL: {
+            const_ref_t slot = read_byte().constant_ref;
+            emplace(stack[slot]);
+        } break;
+        case OpCode::SET_LOCAL: {
+            const_ref_t slot = read_byte().constant_ref;
+            stack[slot] = peek(0);
+        } break;
         case OpCode::GET_GLOBAL: {
             auto name = read_string();
             if (!globals.contains(name)) {

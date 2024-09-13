@@ -2,6 +2,7 @@
 
 #include "src/debug_flags.h"
 #include "src/vm/debug.h"
+#include <algorithm>
 #include <array>
 #include <charconv>
 #include <fmt/format.h>
@@ -15,7 +16,8 @@ Precedence operator+(Precedence precedence, int other) {
 }
 
 Compiler::Compiler(HeapManager &heap_manager, const std::string &source)
-    : heap_manager(heap_manager), parser(source), compiling_chunk() {}
+    : heap_manager(heap_manager), parser(source), compiling_chunk(), locals(),
+      scope_depth(0) {}
 
 std::optional<Chunk> Compiler::compile() {
     parser.advance();
@@ -36,9 +38,22 @@ std::optional<Chunk> Compiler::compile() {
 
 void Compiler::expression() { parse_precedence(Precedence::ASSIGNMENT); }
 
+void Compiler::block() {
+    while (!parser.check(TokenType::RIGHT_BRACE) and
+           !parser.check(TokenType::END_OF_FILE)) {
+        declaration();
+    }
+
+    parser.consume(TokenType::RIGHT_BRACE, "Expect '}' after block.");
+}
+
 void Compiler::statement() {
     if (parser.match(TokenType::PRINT)) {
         print_statement();
+    } else if (parser.match(TokenType::LEFT_BRACE)) {
+        begin_scope();
+        block();
+        end_scope();
     } else {
         expression_statement();
     }
@@ -76,6 +91,18 @@ void Compiler::var_declaration() {
                    "Expect ';' after variable declaration.");
 
     define_variable(global);
+}
+
+void Compiler::begin_scope() { scope_depth++; }
+
+void Compiler::end_scope() {
+    scope_depth--;
+
+    // TODO: add OpCode::POPN to pop many times.
+    while (locals.size() > 0 and locals.back().depth > scope_depth) {
+        emit(OpCode::POP);
+        locals.pop_back();
+    }
 }
 
 void Compiler::number(bool can_assign) {
@@ -176,13 +203,54 @@ void Compiler::variable(bool can_assign) {
     named_variable(parser.previous, can_assign);
 }
 
+void Compiler::declare_variable() {
+    Token name = parser.previous;
+
+    if (scope_depth == 0) {
+        return;
+    }
+
+    // Declare local variable.
+    for (auto local_it = locals.rbegin(); local_it < locals.rend();
+         local_it++) {
+        if (local_it->is_initialized() and local_it->depth < scope_depth) {
+            break;
+        }
+
+        if (name.lexeme == local_it->name.lexeme) {
+            parser.error("Already a variable with this name in this scope.");
+        }
+    }
+    add_local(name);
+}
+
 const_ref_t Compiler::parse_variable(const std::string &error_message) {
     parser.consume(TokenType::IDENTIFIER, error_message);
+
+    declare_variable();
+    if (scope_depth > 0) {
+        return 0;
+    }
+
     return identifier_constant(parser.previous);
 }
 
 void Compiler::define_variable(const_ref_t global) {
+    if (scope_depth > 0) {
+        // Local variables live on the stack.
+        locals.back().mark_initialized(scope_depth);
+        return;
+    }
     emit(OpCode::DEFINE_GLOBAL, global);
+}
+
+void Compiler::add_local(const Token &name) {
+    if (locals.size() >= std::numeric_limits<const_ref_t>::max()) {
+        parser.error("Too many local variables in function.");
+        return;
+    }
+
+    locals.emplace_back(name, -1);
 }
 
 Chunk &Compiler::current_chunk() { return compiling_chunk; }
@@ -207,11 +275,11 @@ void Compiler::emit(InstructionData data1, InstructionData data2) {
 
 void Compiler::emit_return() { emit(OpCode::RETURN); }
 
-void Compiler::emit_constant(Value value) {
+void Compiler::emit_constant(const Value &value) {
     emit(OpCode::CONSTANT, make_constant(value));
 }
 
-const_ref_t Compiler::make_constant(Value value) {
+const_ref_t Compiler::make_constant(const Value &value) {
     int constant_ref = current_chunk().add_constant(value);
     if (constant_ref > std::numeric_limits<const_ref_t>::max()) {
         // Not really a parser error, but we use the parser for bookkeeping
@@ -226,14 +294,41 @@ const_ref_t Compiler::identifier_constant(const Token &name) {
     return make_constant(heap_manager.initialize(name.lexeme));
 }
 
+std::optional<const_ref_t> Compiler::resolve_local(const Token &name) {
+    auto local = std::find_if(locals.rbegin(), locals.rend(),
+                              [&name](const auto &local) {
+                                  return local.name.lexeme == name.lexeme;
+                              });
+
+    if (local == locals.rend()) {
+        return std::nullopt;
+    }
+    if (!local->is_initialized()) {
+        parser.error("Can't read local variable in its own initializer.");
+    }
+    return static_cast<const_ref_t>(std::distance(local, locals.rend()) - 1);
+}
+
 void Compiler::named_variable(const Token &name, bool can_assign) {
-    const_ref_t arg = identifier_constant(name);
+    OpCode get_op, set_op;
+    std::optional<const_ref_t> arg_opt = resolve_local(name);
+    const_ref_t arg;
+
+    if (arg_opt) {
+        arg = arg_opt.value();
+        get_op = OpCode::GET_LOCAL;
+        set_op = OpCode::SET_LOCAL;
+    } else {
+        arg = identifier_constant(name);
+        get_op = OpCode::GET_GLOBAL;
+        set_op = OpCode::SET_GLOBAL;
+    }
 
     if (can_assign and parser.match(TokenType::EQUAL)) {
         expression();
-        emit(OpCode::SET_GLOBAL, arg);
+        emit(set_op, arg);
     } else {
-        emit(OpCode::GET_GLOBAL, arg);
+        emit(get_op, arg);
     }
 }
 
@@ -310,3 +405,11 @@ constinit ParseRule rules[]{
 #undef FUNC
 #undef TOKEN
 };
+
+Local::Local(Token name) : Local(name, -1) {}
+
+Local::Local(Token name, int depth) : name(name), depth(depth) {}
+
+void Local::mark_initialized(int depth) { this->depth = depth; }
+
+bool Local::is_initialized() const { return depth != -1; }

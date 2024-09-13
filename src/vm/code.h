@@ -24,6 +24,8 @@ enum struct OpCode : int8_t {
     DEFINE_GLOBAL,
     SET_GLOBAL,
     GET_GLOBAL,
+    SET_LOCAL,
+    GET_LOCAL,
     PRINT,
     RETURN
 };

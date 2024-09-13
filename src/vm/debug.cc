@@ -22,6 +22,12 @@ int constant_instruction(const std::string &name, Chunk &chunk, int offset) {
     return offset + 2;
 }
 
+static int byte_instruction(const std::string &name, Chunk &chunk, int offset) {
+    const_ref_t slot = chunk.code[offset + 1].constant_ref;
+    std::cout << fmt::format("{:16s} {:4d}\n", name, slot);
+    return offset + 2;
+}
+
 int disassemble_instruction(Chunk &chunk, int offset) {
     std::cout << fmt::format("{:04d} ", offset);
     if (offset > 0 and chunk.get_line(offset - 1) == chunk.get_line(offset)) {
@@ -37,6 +43,10 @@ int disassemble_instruction(Chunk &chunk, int offset) {
         return constant_instruction("CONSTANT", chunk, offset);
     case OpCode::DEFINE_GLOBAL:
         return constant_instruction("DEFINE_GLOBAL", chunk, offset);
+    case OpCode::GET_LOCAL:
+        return byte_instruction("GET_LOCAL", chunk, offset);
+    case OpCode::SET_LOCAL:
+        return byte_instruction("SET_LOCAL", chunk, offset);
     case OpCode::GET_GLOBAL:
         return constant_instruction("GET_GLOBAL", chunk, offset);
     case OpCode::SET_GLOBAL:
