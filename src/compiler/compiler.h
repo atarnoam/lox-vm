@@ -67,6 +67,7 @@ struct Compiler {
     void expression_statement();
     void if_statement();
     void while_statement();
+    void for_statement();
     void var_declaration();
 
     void begin_scope();

@@ -54,6 +54,8 @@ void Compiler::statement() {
         if_statement();
     } else if (parser.match(TokenType::WHILE)) {
         while_statement();
+    } else if (parser.match(TokenType::FOR)) {
+        for_statement();
     } else if (parser.match(TokenType::LEFT_BRACE)) {
         begin_scope();
         block();
@@ -116,6 +118,52 @@ void Compiler::while_statement() {
 
     patch_jump(exit_jump);
     emit(OpCode::POP);
+}
+
+void Compiler::for_statement() {
+    begin_scope();
+    parser.consume(TokenType::LEFT_PAREN, "Expect '(' after 'for'.");
+    if (parser.match(TokenType::SEMICOLON)) {
+        // No initializer.
+    } else if (parser.match(TokenType::VAR)) {
+        var_declaration();
+    } else {
+        expression_statement();
+    }
+    int loop_start = compiling_chunk.code.size();
+    // TODO: change to optional?
+    int exit_jump = -1;
+    if (!parser.match(TokenType::SEMICOLON)) {
+        expression();
+        parser.consume(TokenType::SEMICOLON,
+                       "Expect ';' after loop condition.");
+
+        // Jump out of the loop if the condition is false.
+        exit_jump = emit_jump(OpCode::JUMP_IF_FALSE);
+        emit(OpCode::POP); // Condition.
+    }
+
+    if (!parser.match(TokenType::RIGHT_PAREN)) {
+        int body_jump = emit_jump(OpCode::JUMP);
+        int incrementStart = compiling_chunk.code.size();
+        expression();
+        emit(OpCode::POP);
+        parser.consume(TokenType::RIGHT_PAREN, "Expect ')' after for clauses.");
+
+        emit_loop(loop_start);
+        loop_start = incrementStart;
+        patch_jump(body_jump);
+    }
+
+    statement();
+    emit_loop(loop_start);
+
+    if (exit_jump != -1) {
+        patch_jump(exit_jump);
+        emit(OpCode::POP); // Condition.
+    }
+
+    end_scope();
 }
 
 void Compiler::var_declaration() {
