@@ -22,10 +22,18 @@ int constant_instruction(const std::string &name, Chunk &chunk, int offset) {
     return offset + 2;
 }
 
-static int byte_instruction(const std::string &name, Chunk &chunk, int offset) {
+int byte_instruction(const std::string &name, Chunk &chunk, int offset) {
     const_ref_t slot = chunk.code[offset + 1].constant_ref;
     std::cout << fmt::format("{:16s} {:4d}\n", name, slot);
     return offset + 2;
+}
+
+int jump_instruction(const std::string &name, int sign, const Chunk &chunk,
+                     int offset) {
+    jump_off_t jump = chunk.read_jump(offset + 1);
+    std::cout << fmt::format("{:16s} {:4d} -> {:d}\n", name, offset,
+                             offset + 3 + sign * jump);
+    return offset + 3;
 }
 
 int disassemble_instruction(Chunk &chunk, int offset) {
@@ -79,6 +87,10 @@ int disassemble_instruction(Chunk &chunk, int offset) {
         return simple_instruction("POP", offset);
     case OpCode::PRINT:
         return simple_instruction("PRINT", offset);
+    case OpCode::JUMP:
+        return jump_instruction("JUMP", 1, chunk, offset);
+    case OpCode::JUMP_IF_FALSE:
+        return jump_instruction("JUMP_IF_FALSE", 1, chunk, offset);
     default:
         std::cout << fmt::format("Unknown opcode {}\n",
                                  static_cast<int>(instruction));

@@ -6,6 +6,7 @@
 #include "src/vm/value.h"
 
 #include <optional>
+#include <type_traits>
 
 struct Compiler;
 typedef void (Compiler::*ParseFn)(bool);
@@ -62,6 +63,7 @@ struct Compiler {
     // Statements
     void print_statement();
     void expression_statement();
+    void if_statement();
     void var_declaration();
 
     void begin_scope();
@@ -76,17 +78,23 @@ struct Compiler {
 
     void end_compilation();
 
-    void emit(InstructionData data);
-    void emit(InstructionData data1, InstructionData data2);
+    template <typename... Args>
+    requires(std::convertible_to<Args, InstructionData> and...) void emit(
+        Args... data) {
+        ([&]() { current_chunk().write(data, parser.previous.line); }(), ...);
+    };
 
     void emit_return();
     void emit_constant(const Value &value);
+    int emit_jump(OpCode instruction);
 
     const_ref_t make_constant(const Value &value);
     const_ref_t identifier_constant(const Token &name);
     std::optional<const_ref_t> resolve_local(const Token &name);
 
     void named_variable(const Token &name, bool can_assign);
+
+    void patch_jump(int offset);
 
     void parse_precedence(Precedence precedence);
 

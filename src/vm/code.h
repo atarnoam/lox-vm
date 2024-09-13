@@ -27,10 +27,13 @@ enum struct OpCode : int8_t {
     SET_LOCAL,
     GET_LOCAL,
     PRINT,
+    JUMP,
+    JUMP_IF_FALSE,
     RETURN
 };
 
 using const_ref_t = int8_t;
+using jump_off_t = uint16_t;
 
 union InstructionData {
     OpCode opcode;
@@ -49,6 +52,11 @@ struct CodeChunk {
 
     void write(InstructionData instruction_data, int line);
 
+    template <typename IteratorT>
+    jump_off_t read_jump(const IteratorT &it) const {
+        return read_jump_ptr(&(*it));
+    }
+
     int get_line(int instruction);
 
     struct LineData {
@@ -65,9 +73,13 @@ struct CodeChunk {
         decltype(lines)::const_iterator last_line;
         int last_instruction;
     };
-
     std::vector<InstructionData> code;
 
   private:
+    jump_off_t read_jump_ptr(const InstructionData *code_ptr) const;
+
     LineData lines;
 };
+
+template <>
+jump_off_t CodeChunk::read_jump<int>(const int &offset) const;

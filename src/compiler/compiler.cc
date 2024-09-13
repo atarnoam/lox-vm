@@ -50,6 +50,8 @@ void Compiler::block() {
 void Compiler::statement() {
     if (parser.match(TokenType::PRINT)) {
         print_statement();
+    } else if (parser.match(TokenType::IF)) {
+        if_statement();
     } else if (parser.match(TokenType::LEFT_BRACE)) {
         begin_scope();
         block();
@@ -77,6 +79,26 @@ void Compiler::expression_statement() {
     expression();
     parser.consume(TokenType::SEMICOLON, "Expect ';' after expression.");
     emit(OpCode::POP);
+}
+
+void Compiler::if_statement() {
+    parser.consume(TokenType::LEFT_PAREN, "Expect '(' after 'if'.");
+    expression();
+    parser.consume(TokenType::RIGHT_PAREN, "Expect ')' after condition.");
+
+    int then_jump = emit_jump(OpCode::JUMP_IF_FALSE);
+    emit(OpCode::POP);
+    statement();
+
+    patch_jump(then_jump);
+
+    int else_jump = emit_jump(OpCode::JUMP);
+    emit(OpCode::POP);
+
+    if (parser.match(TokenType::ELSE)) {
+        statement();
+    }
+    patch_jump(else_jump);
 }
 
 void Compiler::var_declaration() {
@@ -264,19 +286,19 @@ void Compiler::end_compilation() {
     }
 }
 
-void Compiler::emit(InstructionData data) {
-    current_chunk().write(data, parser.previous.line);
-}
-
-void Compiler::emit(InstructionData data1, InstructionData data2) {
-    emit(data1);
-    emit(data2);
-}
-
 void Compiler::emit_return() { emit(OpCode::RETURN); }
 
 void Compiler::emit_constant(const Value &value) {
     emit(OpCode::CONSTANT, make_constant(value));
+}
+
+int Compiler::emit_jump(OpCode instruction) {
+    emit(instruction);
+    // To be patched
+    for (size_t i = 0; i < sizeof(jump_off_t); ++i) {
+        emit(0xff);
+    }
+    return compiling_chunk.code.size() - 2;
 }
 
 const_ref_t Compiler::make_constant(const Value &value) {
@@ -330,6 +352,17 @@ void Compiler::named_variable(const Token &name, bool can_assign) {
     } else {
         emit(get_op, arg);
     }
+}
+
+void Compiler::patch_jump(int offset) {
+    // the minus to adjust for the bytecode for the jump offset itself.
+    int jump = compiling_chunk.code.size() - offset - sizeof(jump_off_t);
+
+    if (jump > std::numeric_limits<const_ref_t>::max()) {
+        parser.error("Too much code to jump over.");
+    }
+
+    *reinterpret_cast<jump_off_t *>(&compiling_chunk.code[offset]) = jump;
 }
 
 void Compiler::parse_precedence(Precedence precedence) {

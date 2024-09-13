@@ -40,6 +40,7 @@ struct VM {
     __attribute__((always_inline)) InstructionData read_byte() {
         return *(ip++);
     }
+    jump_off_t read_jump();
     Value read_constant();
     heap_ptr<ObjString> read_string();
 
@@ -62,6 +63,8 @@ struct VM {
         std::cerr << fmt::format("[line {}] in script.", line) << std::endl;
         reset_stack();
     };
+
+    void print_stack() const;
 
     HeapManager heap_manager;
     VariableMap globals;

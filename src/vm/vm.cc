@@ -15,6 +15,11 @@ InterpretResult VM::run_chunk(Chunk &ch) {
 }
 
 InterpretResult VM::run() {
+#define RETURN_ERROR()                                                         \
+    {                                                                          \
+        result = InterpretResult::RUNTIME_ERROR;                               \
+        goto DONE;                                                             \
+    }
 #define ASSERT_NUM()                                                           \
     if (!peek(0).is_number()) {                                                \
         runtime_error("Operand must be a number.");                            \
@@ -26,21 +31,22 @@ InterpretResult VM::run() {
         return InterpretResult::RUNTIME_ERROR;                                 \
     }
 
+    InterpretResult result;
+
+    // Breaking out of this loop is done using `goto`, because we don't want to
+    // check a variable in every loop iteration.
     for (;;) {
         if constexpr (DEBUG_TRACE_EXECUTION) {
+            print_stack();
             disassemble_instruction(*chunk, ip - chunk->code.begin());
-            std::cout << "          ";
-            for (const auto &value : stack) {
-                std::cout << "[ " << value << " ]";
-            }
-            std::cout << "\n";
         }
         OpCode instruction;
         // TODO: understand if functions here are inlined.
         switch (instruction = read_byte().opcode) {
-        case OpCode::RETURN: {
-            return InterpretResult::OK;
-        }
+        case OpCode::RETURN:
+            result = InterpretResult::OK;
+            goto DONE;
+            break;
         case OpCode::CONSTANT: {
             Value constant = read_constant();
             push(constant);
@@ -63,7 +69,7 @@ InterpretResult VM::run() {
             if (!globals.contains(name)) {
                 runtime_error("Undefined variable '{}'.",
                               static_cast<std::string>(*name));
-                return InterpretResult::RUNTIME_ERROR;
+                RETURN_ERROR();
             }
             push(globals.at(name));
         } break;
@@ -73,7 +79,7 @@ InterpretResult VM::run() {
             if (name_it == globals.end()) {
                 runtime_error("Undefined variable '{}'.",
                               static_cast<std::string>(*name));
-                return InterpretResult::RUNTIME_ERROR;
+                RETURN_ERROR();
             }
             auto &[_, value] = *name_it;
             value = peek(0);
@@ -98,7 +104,7 @@ InterpretResult VM::run() {
                 binary_func<double, std::plus>();
             } else {
                 runtime_error("Operands must be two numbers or two strings.");
-                return InterpretResult::RUNTIME_ERROR;
+                RETURN_ERROR();
             }
             break;
         case OpCode::SUBTRACT:
@@ -135,10 +141,23 @@ InterpretResult VM::run() {
         case OpCode::FALSE:
             emplace(false);
             break;
+        case OpCode::JUMP: {
+            jump_off_t offset = read_jump();
+            ip += offset;
+        } break;
+        case OpCode::JUMP_IF_FALSE: {
+            jump_off_t offset = read_jump();
+            if (!static_cast<bool>(peek(0))) {
+                ip += offset;
+            }
+        } break;
         }
     }
+DONE:
+    return result;
 #undef ASSERT_NUM
 #undef ASSERT_NUMS
+#undef RETURN_ERROR
 }
 
 void VM::push(const Value &value) { stack.push_back(value); }
@@ -157,9 +176,23 @@ InterpretMode VM::interpret_mode() const { return m_interpret_mode; }
 
 void VM::reset_stack() { stack.resize(0); }
 
+jump_off_t VM::read_jump() {
+    jump_off_t ret = chunk->read_jump<decltype(ip)>(ip);
+    ip += sizeof(jump_off_t);
+    return ret;
+}
+
 Value VM::read_constant() { return chunk->constants[read_byte().constant_ref]; }
 
 heap_ptr<ObjString> VM::read_string() { return read_constant().as_string(); }
+
+void VM::print_stack() const {
+    std::cout << "          ";
+    for (const auto &value : stack) {
+        std::cout << "[ " << value << " ]";
+    }
+    std::cout << "\n";
+}
 
 InterpretResult interpret(VM &vm, const std::string &source) {
     Compiler compiler(vm.get_heap_manager(), source);
