@@ -66,6 +66,7 @@ struct Compiler {
     void print_statement();
     void expression_statement();
     void if_statement();
+    void while_statement();
     void var_declaration();
 
     void begin_scope();
@@ -89,6 +90,11 @@ struct Compiler {
     void emit_return();
     void emit_constant(const Value &value);
     int emit_jump(OpCode instruction);
+    /** returns index of jump value. */
+    int emit_jump_value(jump_off_t value);
+    // Empty jump
+    int emit_jump_value();
+    void emit_loop(int loop_start);
 
     const_ref_t make_constant(const Value &value);
     const_ref_t identifier_constant(const Token &name);

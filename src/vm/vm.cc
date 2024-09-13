@@ -157,6 +157,10 @@ InterpretResult VM::run() {
                 ip += offset;
             }
         } break;
+        case OpCode::LOOP: {
+            jump_off_t offset = read_jump();
+            ip -= offset;
+        } break;
         }
     }
 DONE:
@@ -183,7 +187,7 @@ InterpretMode VM::interpret_mode() const { return m_interpret_mode; }
 void VM::reset_stack() { stack.resize(0); }
 
 jump_off_t VM::read_jump() {
-    jump_off_t ret = chunk->read_jump<decltype(ip)>(ip);
+    jump_off_t ret = get_jump_off(ip);
     ip += sizeof(jump_off_t);
     return ret;
 }

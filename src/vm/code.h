@@ -30,6 +30,7 @@ enum struct OpCode : int8_t {
     JUMP,
     JUMP_IF_FALSE,
     JUMP_IF_TRUE,
+    LOOP,
     RETURN
 };
 
@@ -44,6 +45,19 @@ union InstructionData {
     InstructionData(const_ref_t constant_ref);
 };
 
+inline const jump_off_t *as_jump_ptr(const InstructionData *code_ptr) {
+    return reinterpret_cast<const jump_off_t *>(code_ptr);
+}
+
+inline jump_off_t *as_jump_ptr(InstructionData *code_ptr) {
+    return reinterpret_cast<jump_off_t *>(code_ptr);
+}
+
+template <typename PtrT>
+jump_off_t get_jump_off(const PtrT &it) {
+    return *as_jump_ptr(&(*it));
+}
+
 /** A code chunk is a chunk that holds just code, and the line numbers they came
  * from. This is a syntactic type, and thus `Value`s are not held here.
  */
@@ -53,12 +67,10 @@ struct CodeChunk {
 
     void write(InstructionData instruction_data, int line);
 
-    template <typename IteratorT>
-    jump_off_t read_jump(const IteratorT &it) const {
-        return read_jump_ptr(&(*it));
-    }
-
     int get_line(int instruction);
+
+    const jump_off_t &jump_at(int offset) const;
+    jump_off_t &jump_at(int offset);
 
     struct LineData {
         LineData();
@@ -77,10 +89,5 @@ struct CodeChunk {
     std::vector<InstructionData> code;
 
   private:
-    jump_off_t read_jump_ptr(const InstructionData *code_ptr) const;
-
     LineData lines;
 };
-
-template <>
-jump_off_t CodeChunk::read_jump<int>(const int &offset) const;

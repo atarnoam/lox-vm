@@ -52,6 +52,8 @@ void Compiler::statement() {
         print_statement();
     } else if (parser.match(TokenType::IF)) {
         if_statement();
+    } else if (parser.match(TokenType::WHILE)) {
+        while_statement();
     } else if (parser.match(TokenType::LEFT_BRACE)) {
         begin_scope();
         block();
@@ -98,6 +100,22 @@ void Compiler::if_statement() {
         statement();
     }
     patch_jump(else_jump);
+}
+
+void Compiler::while_statement() {
+    int loop_start = compiling_chunk.code.size();
+
+    parser.consume(TokenType::LEFT_PAREN, "Expect '(' after 'while'.");
+    expression();
+    parser.consume(TokenType::RIGHT_PAREN, "Expect ')' after condition.");
+
+    int exit_jump = emit_jump(OpCode::JUMP_IF_FALSE);
+    emit(OpCode::POP);
+    statement();
+    emit_loop(loop_start);
+
+    patch_jump(exit_jump);
+    emit(OpCode::POP);
 }
 
 void Compiler::var_declaration() {
@@ -309,11 +327,34 @@ void Compiler::emit_constant(const Value &value) {
 
 int Compiler::emit_jump(OpCode instruction) {
     emit(instruction);
-    // To be patched
+    // Empty for now, to be patched
+    return emit_jump_value();
+}
+
+int Compiler::emit_jump_value(jump_off_t value) {
+    int jump_offset = emit_jump_value();
+    // We might be able to write it without initializing-then-setting, but
+    // whatever.
+    compiling_chunk.jump_at(jump_offset) = value;
+    return jump_offset;
+}
+
+int Compiler::emit_jump_value() {
+    int offset = compiling_chunk.code.size();
     for (size_t i = 0; i < sizeof(jump_off_t); ++i) {
         emit(0xff);
     }
-    return compiling_chunk.code.size() - 2;
+    return offset;
+}
+
+void Compiler::emit_loop(int loop_start) {
+    emit(OpCode::LOOP);
+    int offset = compiling_chunk.code.size() - loop_start + sizeof(jump_off_t);
+    if (offset > std::numeric_limits<jump_off_t>::max()) {
+        parser.error("Loop body too large.");
+    }
+
+    emit_jump_value(offset);
 }
 
 const_ref_t Compiler::make_constant(const Value &value) {
@@ -373,11 +414,11 @@ void Compiler::patch_jump(int offset) {
     // the minus to adjust for the bytecode for the jump offset itself.
     int jump = compiling_chunk.code.size() - offset - sizeof(jump_off_t);
 
-    if (jump > std::numeric_limits<const_ref_t>::max()) {
+    if (jump > std::numeric_limits<jump_off_t>::max()) {
         parser.error("Too much code to jump over.");
     }
 
-    *reinterpret_cast<jump_off_t *>(&compiling_chunk.code[offset]) = jump;
+    compiling_chunk.jump_at(offset) = jump;
 }
 
 void Compiler::parse_precedence(Precedence precedence) {

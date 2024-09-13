@@ -12,15 +12,14 @@ void CodeChunk::write(InstructionData instruction_data, int line) {
     lines.add_line(line);
 }
 
-template <>
-jump_off_t CodeChunk::read_jump<int>(const int &offset) const {
-    return read_jump(&code[offset]);
-}
-
 int CodeChunk::get_line(int instruction) { return lines.get_line(instruction); }
 
-jump_off_t CodeChunk::read_jump_ptr(const InstructionData *code_ptr) const {
-    return *reinterpret_cast<const jump_off_t *>(code_ptr);
+const jump_off_t &CodeChunk::jump_at(int offset) const {
+    return *as_jump_ptr(&code[offset]);
+}
+
+jump_off_t &CodeChunk::jump_at(int offset) {
+    return *as_jump_ptr(&code[offset]);
 }
 
 CodeChunk::LineData::LineData()
