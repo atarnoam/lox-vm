@@ -26,8 +26,8 @@ std::optional<Chunk> Compiler::compile() {
             parser.synchronize();
         }
     }
-
     end_compilation();
+
     if (parser.had_error()) {
         return std::nullopt;
     }
@@ -78,19 +78,19 @@ void Compiler::var_declaration() {
     define_variable(global);
 }
 
-void Compiler::number() {
+void Compiler::number(bool can_assign) {
     double value;
     std::string_view &lexeme = parser.previous.lexeme;
     std::from_chars(lexeme.data(), lexeme.data() + lexeme.size(), value);
     emit_constant(value);
 }
 
-void Compiler::grouping() {
+void Compiler::grouping(bool can_assign) {
     expression();
     parser.consume(TokenType::RIGHT_PAREN, "Expect ')' after expression.");
 }
 
-void Compiler::unary() {
+void Compiler::unary(bool can_assign) {
     TokenType operator_type = parser.previous.type;
 
     // Compile operand.
@@ -109,7 +109,7 @@ void Compiler::unary() {
     }
 }
 
-void Compiler::binary() {
+void Compiler::binary(bool can_assign) {
     TokenType operator_type = parser.previous.type;
     ParseRule &rule = get_rule(operator_type);
     parse_precedence(rule.precedence + 1);
@@ -151,7 +151,7 @@ void Compiler::binary() {
     }
 }
 
-void Compiler::literal() {
+void Compiler::literal(bool can_assign) {
     switch (parser.previous.type) {
     case TokenType::FALSE:
         emit(OpCode::FALSE);
@@ -167,9 +167,13 @@ void Compiler::literal() {
     }
 }
 
-void Compiler::string() {
+void Compiler::string(bool can_assign) {
     auto lexeme = parser.previous.lexeme;
     emit_constant(heap_manager.initialize(lexeme.substr(1, lexeme.size() - 2)));
+}
+
+void Compiler::variable(bool can_assign) {
+    named_variable(parser.previous, can_assign);
 }
 
 const_ref_t Compiler::parse_variable(const std::string &error_message) {
@@ -222,20 +226,37 @@ const_ref_t Compiler::identifier_constant(const Token &name) {
     return make_constant(heap_manager.initialize(name.lexeme));
 }
 
+void Compiler::named_variable(const Token &name, bool can_assign) {
+    const_ref_t arg = identifier_constant(name);
+
+    if (can_assign and parser.match(TokenType::EQUAL)) {
+        expression();
+        emit(OpCode::SET_GLOBAL, arg);
+    } else {
+        emit(OpCode::GET_GLOBAL, arg);
+    }
+}
+
 void Compiler::parse_precedence(Precedence precedence) {
     parser.advance();
+
     ParseFn prefix_rule = get_rule(parser.previous.type).prefix;
     if (prefix_rule == nullptr) {
         parser.error("Expect expression.");
         return;
     }
 
-    std::invoke(prefix_rule, this);
+    bool can_assign = precedence <= Precedence::ASSIGNMENT;
+    std::invoke(prefix_rule, this, can_assign);
 
     while (precedence <= get_rule(parser.current.type).precedence) {
         parser.advance();
         ParseFn infix_rule = get_rule(parser.previous.type).infix;
-        std::invoke(infix_rule, this);
+        std::invoke(infix_rule, this, can_assign);
+    }
+
+    if (can_assign && parser.match(TokenType::EQUAL)) {
+        parser.error("Invalid assignment target.");
     }
 }
 
@@ -265,7 +286,7 @@ constinit ParseRule rules[]{
     [TOKEN(GREATER_EQUAL)] = {nullptr, FUNC(binary), Precedence::COMPARISON},
     [TOKEN(LESS)] = {nullptr, FUNC(binary), Precedence::COMPARISON},
     [TOKEN(LESS_EQUAL)] = {nullptr, FUNC(binary), Precedence::COMPARISON},
-    [TOKEN(IDENTIFIER)] = {nullptr, nullptr, Precedence::NONE},
+    [TOKEN(IDENTIFIER)] = {FUNC(variable), nullptr, Precedence::NONE},
     [TOKEN(STRING)] = {FUNC(string), nullptr, Precedence::NONE},
     [TOKEN(NUMBER)] = {FUNC(number), nullptr, Precedence::NONE},
     [TOKEN(AND)] = {nullptr, nullptr, Precedence::NONE},

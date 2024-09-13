@@ -15,9 +15,10 @@
 #include <utility>
 
 enum struct InterpretResult { OK, COMPILE_ERROR, RUNTIME_ERROR };
+enum struct InterpretMode { FILE, INTERACTIVE };
 
 struct VM {
-    VM() = default;
+    VM(InterpretMode interpret_mode);
 
     InterpretResult run_chunk(Chunk &chunk);
     InterpretResult run();
@@ -31,6 +32,7 @@ struct VM {
     Value peek(int distance = 0) const;
 
     HeapManager &get_heap_manager();
+    InterpretMode interpret_mode() const;
 
   private:
     void reset_stack();
@@ -39,6 +41,7 @@ struct VM {
         return *(ip++);
     }
     Value read_constant();
+    heap_ptr<ObjString> read_string();
 
     template <typename T, template <typename S> typename FT>
     void binary_func() {
@@ -65,6 +68,7 @@ struct VM {
     Chunk *chunk;
     decltype(chunk->code)::const_iterator ip;
     std::vector<Value> stack;
+    InterpretMode m_interpret_mode;
 };
 
 InterpretResult interpret(VM &vm, const std::string &source);

@@ -62,5 +62,5 @@ int CodeChunk::LineData::get_line(int instruction) {
             return line;
         }
     }
-    throw std::runtime_error("instruction not found");
+    throw std::runtime_error("line of instruction not found");
 }

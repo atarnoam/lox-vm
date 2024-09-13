@@ -6,6 +6,8 @@
 
 #include <optional>
 
+VM::VM(InterpretMode interpret_mode) : m_interpret_mode(interpret_mode) {}
+
 InterpretResult VM::run_chunk(Chunk &ch) {
     chunk = &ch;
     ip = ch.code.begin();
@@ -25,7 +27,7 @@ InterpretResult VM::run() {
     }
 
     for (;;) {
-        if constexpr (DEBUG_TRACE_EXECEUTION) {
+        if constexpr (DEBUG_TRACE_EXECUTION) {
             disassemble_instruction(*chunk, ip - chunk->code.begin());
             std::cout << "          ";
             for (const auto &value : stack) {
@@ -44,9 +46,29 @@ InterpretResult VM::run() {
             push(constant);
         } break;
         case OpCode::DEFINE_GLOBAL: {
-            auto name = read_constant().as_string();
+            auto name = read_string();
             globals.emplace(name, peek(0));
             pop();
+        } break;
+        case OpCode::GET_GLOBAL: {
+            auto name = read_string();
+            if (!globals.contains(name)) {
+                runtime_error("Undefined variable '{}'.",
+                              static_cast<std::string>(*name));
+                return InterpretResult::RUNTIME_ERROR;
+            }
+            push(globals.at(name));
+        } break;
+        case OpCode::SET_GLOBAL: {
+            auto name = read_string();
+            auto name_it = globals.find(name);
+            if (name_it == globals.end()) {
+                runtime_error("Undefined variable '{}'.",
+                              static_cast<std::string>(*name));
+                return InterpretResult::RUNTIME_ERROR;
+            }
+            auto &[_, value] = *name_it;
+            value = peek(0);
         } break;
         case OpCode::EQUAL: {
             Value b = pop();
@@ -123,9 +145,13 @@ Value VM::peek(int distance) const { return *(stack.rbegin() + distance); }
 
 HeapManager &VM::get_heap_manager() { return heap_manager; }
 
+InterpretMode VM::interpret_mode() const { return m_interpret_mode; }
+
 void VM::reset_stack() { stack.resize(0); }
 
 Value VM::read_constant() { return chunk->constants[read_byte().constant_ref]; }
+
+heap_ptr<ObjString> VM::read_string() { return read_constant().as_string(); }
 
 InterpretResult interpret(VM &vm, const std::string &source) {
     Compiler compiler(vm.get_heap_manager(), source);

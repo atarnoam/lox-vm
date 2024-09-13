@@ -8,7 +8,7 @@
 #include <optional>
 
 struct Compiler;
-typedef void (Compiler::*ParseFn)(void);
+typedef void (Compiler::*ParseFn)(bool);
 
 enum struct Precedence {
     NONE = 0,
@@ -41,12 +41,13 @@ struct Compiler {
     void var_declaration();
 
     // Expressions
-    void number();
-    void grouping();
-    void unary();
-    void binary();
-    void literal();
-    void string();
+    void number(bool can_assign);
+    void grouping(bool can_assign);
+    void unary(bool can_assign);
+    void binary(bool can_assign);
+    void literal(bool can_assign);
+    void string(bool can_assign);
+    void variable(bool can_assign);
 
   private:
     const_ref_t parse_variable(const std::string &error_message);
@@ -64,6 +65,8 @@ struct Compiler {
 
     const_ref_t make_constant(Value value);
     const_ref_t identifier_constant(const Token &name);
+
+    void named_variable(const Token &name, bool can_assign);
 
     void parse_precedence(Precedence precedence);
 

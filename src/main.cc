@@ -22,7 +22,7 @@ int interpret_result_to_exit_code(InterpretResult result) {
 }
 
 int repl() {
-    VM vm{};
+    VM vm{InterpretMode::INTERACTIVE};
 
     std::string s;
     std::cout << "> ";
@@ -35,7 +35,7 @@ int repl() {
 }
 
 int run_file(char *filename) {
-    VM vm;
+    VM vm{InterpretMode::FILE};
     std::ifstream ifs(filename);
     std::string source(std::istreambuf_iterator<char>(ifs), {});
     InterpretResult result = interpret(vm, source);

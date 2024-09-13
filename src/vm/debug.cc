@@ -36,7 +36,11 @@ int disassemble_instruction(Chunk &chunk, int offset) {
     case OpCode::CONSTANT:
         return constant_instruction("CONSTANT", chunk, offset);
     case OpCode::DEFINE_GLOBAL:
-        return constant_instruction("DEFINE_CONSTANT", chunk, offset);
+        return constant_instruction("DEFINE_GLOBAL", chunk, offset);
+    case OpCode::GET_GLOBAL:
+        return constant_instruction("GET_GLOBAL", chunk, offset);
+    case OpCode::SET_GLOBAL:
+        return constant_instruction("SET_GLOBAL", chunk, offset);
     case OpCode::ADD:
         return simple_instruction("ADD", offset);
     case OpCode::SUBTRACT:

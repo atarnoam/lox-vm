@@ -12,7 +12,6 @@ enum struct OpCode : int8_t {
     TRUE,
     FALSE,
     EQUAL,
-    DEFINE_GLOBAL,
     GREATER,
     LESS,
     ADD,
@@ -22,6 +21,9 @@ enum struct OpCode : int8_t {
     NOT,
     NEGATE,
     POP,
+    DEFINE_GLOBAL,
+    SET_GLOBAL,
+    GET_GLOBAL,
     PRINT,
     RETURN
 };
