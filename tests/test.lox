@@ -1,6 +1,8 @@
-var a = 2 + 2;
-if (a > 3) 
+var a = nil or 2;
+print a;
+if (a > 3 and a < 100) 
     print "a is big";
-else
+else {
     print "a is not big";
+}
 

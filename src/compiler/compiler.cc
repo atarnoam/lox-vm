@@ -90,9 +90,8 @@ void Compiler::if_statement() {
     emit(OpCode::POP);
     statement();
 
-    patch_jump(then_jump);
-
     int else_jump = emit_jump(OpCode::JUMP);
+    patch_jump(then_jump);
     emit(OpCode::POP);
 
     if (parser.match(TokenType::ELSE)) {
@@ -223,6 +222,22 @@ void Compiler::string(bool can_assign) {
 
 void Compiler::variable(bool can_assign) {
     named_variable(parser.previous, can_assign);
+}
+
+void Compiler::and_(bool can_assign) {
+    int end_jump = emit_jump(OpCode::JUMP_IF_FALSE);
+    emit(OpCode::POP);
+    parse_precedence(Precedence::AND);
+
+    patch_jump(end_jump);
+}
+
+void Compiler::or_(bool can_assign) {
+    int end_jump = emit_jump(OpCode::JUMP_IF_TRUE);
+    emit(OpCode::POP);
+    parse_precedence(Precedence::OR);
+
+    patch_jump(end_jump);
 }
 
 void Compiler::declare_variable() {
@@ -417,7 +432,7 @@ constinit ParseRule rules[]{
     [TOKEN(IDENTIFIER)] = {FUNC(variable), nullptr, Precedence::NONE},
     [TOKEN(STRING)] = {FUNC(string), nullptr, Precedence::NONE},
     [TOKEN(NUMBER)] = {FUNC(number), nullptr, Precedence::NONE},
-    [TOKEN(AND)] = {nullptr, nullptr, Precedence::NONE},
+    [TOKEN(AND)] = {nullptr, FUNC(and_), Precedence::AND},
     [TOKEN(CLASS)] = {nullptr, nullptr, Precedence::NONE},
     [TOKEN(ELSE)] = {nullptr, nullptr, Precedence::NONE},
     [TOKEN(FALSE)] = {FUNC(literal), nullptr, Precedence::NONE},
@@ -425,7 +440,7 @@ constinit ParseRule rules[]{
     [TOKEN(FUN)] = {nullptr, nullptr, Precedence::NONE},
     [TOKEN(IF)] = {nullptr, nullptr, Precedence::NONE},
     [TOKEN(NIL)] = {FUNC(literal), nullptr, Precedence::NONE},
-    [TOKEN(OR)] = {nullptr, nullptr, Precedence::NONE},
+    [TOKEN(OR)] = {nullptr, FUNC(or_), Precedence::OR},
     [TOKEN(PRINT)] = {nullptr, nullptr, Precedence::NONE},
     [TOKEN(RETURN)] = {nullptr, nullptr, Precedence::NONE},
     [TOKEN(SUPER)] = {nullptr, nullptr, Precedence::NONE},

@@ -91,6 +91,8 @@ int disassemble_instruction(Chunk &chunk, int offset) {
         return jump_instruction("JUMP", 1, chunk, offset);
     case OpCode::JUMP_IF_FALSE:
         return jump_instruction("JUMP_IF_FALSE", 1, chunk, offset);
+    case OpCode::JUMP_IF_TRUE:
+        return jump_instruction("JUMP_IF_TRUE", 1, chunk, offset);
     default:
         std::cout << fmt::format("Unknown opcode {}\n",
                                  static_cast<int>(instruction));

@@ -53,6 +53,8 @@ struct Compiler {
     void literal(bool can_assign);
     void string(bool can_assign);
     void variable(bool can_assign);
+    void and_(bool can_assign);
+    void or_(bool can_assign);
 
   private:
     void expression();

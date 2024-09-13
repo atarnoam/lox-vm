@@ -29,6 +29,7 @@ enum struct OpCode : int8_t {
     PRINT,
     JUMP,
     JUMP_IF_FALSE,
+    JUMP_IF_TRUE,
     RETURN
 };
 

@@ -151,6 +151,12 @@ InterpretResult VM::run() {
                 ip += offset;
             }
         } break;
+        case OpCode::JUMP_IF_TRUE: {
+            jump_off_t offset = read_jump();
+            if (static_cast<bool>(peek(0))) {
+                ip += offset;
+            }
+        } break;
         }
     }
 DONE:
