@@ -1,7 +1,7 @@
 #pragma once
 
 #include <iostream>
-#include <unordered_set>
+#include <unordered_map>
 #include <vector>
 
 #include "src/vm/gc/heap_obj.h"
@@ -70,5 +70,5 @@ constinit inline auto STRING_EQ = [](heap_ptr<ObjString> string1,
 };
 
 /** Used for string interning. */
-using StringSet = std::unordered_set<heap_ptr<ObjString>, decltype(STRING_HASH),
-                                     decltype(STRING_EQ)>;
+using StringSet = std::unordered_map<std::string, heap_ptr<ObjString>,
+                                     decltype(obj_string::hash_func)>;

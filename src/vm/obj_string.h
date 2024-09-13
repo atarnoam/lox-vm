@@ -4,8 +4,10 @@
 #include <type_traits>
 #include <utility>
 
+namespace obj_string {
 constinit inline auto hash_func = std::hash<std::string>{};
 using hash_t = std::invoke_result_t<decltype(hash_func), std::string>;
+}; // namespace obj_string
 
 struct ObjString {
     ObjString(std::string s);
@@ -14,13 +16,13 @@ struct ObjString {
 
     bool operator==(const ObjString &other) const;
 
-    hash_t hash() const;
+    obj_string::hash_t hash() const;
 
   private:
     std::string string;
-    hash_t m_hash;
+    obj_string::hash_t m_hash;
 };
 
 struct ObjStringHash {
-    hash_t operator()(const ObjString &string);
+    obj_string::hash_t operator()(const ObjString &string);
 };

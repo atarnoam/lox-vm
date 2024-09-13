@@ -1,5 +1,7 @@
 #include "obj_string.h"
 
+using namespace obj_string;
+
 ObjString::ObjString(std::string s)
     : string(std::move(s)), m_hash(hash_func(string)) {}
 
