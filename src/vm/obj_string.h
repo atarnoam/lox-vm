@@ -4,7 +4,7 @@
 #include <type_traits>
 #include <utility>
 
-constinit auto hash_func = std::hash<std::string>{};
+constinit inline auto hash_func = std::hash<std::string>{};
 using hash_t = std::invoke_result_t<decltype(hash_func), std::string>;
 
 struct ObjString {

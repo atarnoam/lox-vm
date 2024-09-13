@@ -24,6 +24,9 @@ struct Value {
     double as_number() const;
     heap_ptr<ObjString> as_string() const;
 
+    operator double() const;
+    operator heap_ptr<ObjString>() const;
+
     bool is_bool() const;
     bool is_nil() const;
     bool is_number() const;
@@ -57,12 +60,12 @@ using ValueArray = std::vector<Value>;
 
 std::ostream &operator<<(std::ostream &os, const Value &value);
 
-constinit auto STRING_HASH = [](heap_ptr<ObjString> string) {
+constinit inline auto STRING_HASH = [](heap_ptr<ObjString> string) {
     return string->hash();
 };
 
-constinit auto STRING_EQ = [](heap_ptr<ObjString> string1,
-                              heap_ptr<ObjString> string2) {
+constinit inline auto STRING_EQ = [](heap_ptr<ObjString> string1,
+                                     heap_ptr<ObjString> string2) {
     return *string1 == *string2;
 };
 

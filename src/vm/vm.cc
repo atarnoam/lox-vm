@@ -59,8 +59,14 @@ InterpretResult VM::run() {
             binary_func<double, std::less>();
             break;
         case OpCode::ADD:
-            ASSERT_NUMS();
-            binary_func<double, std::plus>();
+            if (peek(0).is_string() and peek(1).is_string()) {
+                binary_func<heap_ptr<ObjString>, std::plus>();
+            } else if (peek(0).is_number() and peek(1).is_number()) {
+                binary_func<double, std::plus>();
+            } else {
+                runtime_error("Operands must be two numbers or two strings.");
+                return InterpretResult::RUNTIME_ERROR;
+            }
             break;
         case OpCode::SUBTRACT:
             ASSERT_NUMS();
@@ -106,12 +112,14 @@ Value VM::pop() {
 
 Value VM::peek(int distance) const { return *(stack.rbegin() + distance); }
 
+HeapManager &VM::get_heap_manager() { return heap_manager; }
+
 void VM::reset_stack() { stack.resize(0); }
 
 Value VM::read_constant() { return chunk->constants[read_byte().constant_ref]; }
 
 InterpretResult interpret(VM &vm, const std::string &source) {
-    Compiler compiler(source);
+    Compiler compiler(vm.get_heap_manager(), source);
     std::optional<Chunk> chunk = compiler.compile();
 
     if (!chunk.has_value()) {

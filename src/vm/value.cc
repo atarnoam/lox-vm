@@ -24,6 +24,10 @@ double Value::as_number() const { return as.number; }
 
 heap_ptr<ObjString> Value::as_string() const { return as.string; }
 
+Value::operator double() const { return as_number(); }
+
+Value::operator heap_ptr<ObjString>() const { return as_string(); }
+
 bool Value::is_bool() const { return m_type == ValueType::BOOL; }
 
 bool Value::is_nil() const { return m_type == ValueType::NIL; }

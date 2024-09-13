@@ -3,11 +3,13 @@
 #include "src/vm/chunk.h"
 #include "src/vm/gc/heap.h"
 #include "src/vm/gc/heap_obj.h"
+#include "src/vm/heap_manager.h"
 #include "src/vm/obj_string.h"
 #include "src/vm/value.h"
 
 #include <fmt/format.h>
 #include <functional>
+#include <type_traits>
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
@@ -28,6 +30,8 @@ struct VM {
     Value pop();
     Value peek(int distance = 0) const;
 
+    HeapManager &get_heap_manager();
+
   private:
     void reset_stack();
 
@@ -38,9 +42,13 @@ struct VM {
 
     template <typename T, template <typename S> typename FT>
     void binary_func() {
-        T b = pop().as_number();
-        T a = pop().as_number();
-        emplace(FT{}(a, b));
+        T b = static_cast<T>(pop());
+        T a = static_cast<T>(pop());
+        if constexpr (std::is_same_v<T, heap_ptr<ObjString>>) {
+            emplace(heap_manager.initialize(FT<std::string>{}(*a, *b)));
+        } else {
+            emplace(FT{}(a, b));
+        }
     }
 
     template <typename... Args>
@@ -52,11 +60,10 @@ struct VM {
         reset_stack();
     };
 
-    Heap heap;
+    HeapManager heap_manager;
     Chunk *chunk;
     decltype(chunk->code)::const_iterator ip;
     std::vector<Value> stack;
-    StringSet strings;
 };
 
 InterpretResult interpret(VM &vm, const std::string &source);

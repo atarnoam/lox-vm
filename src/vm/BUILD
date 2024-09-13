@@ -38,6 +38,27 @@ cc_library(
     ],
 )
 
+cc_test(
+    name = "value_test",
+    size = "small",
+    srcs = ["value_test.cc"],
+    deps = [
+        ":value",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "heap_manager",
+    srcs = ["heap_manager.cc"],
+    hdrs = ["heap_manager.h"],
+    deps = [
+        "//src/vm:value",
+        "//src/vm/gc:heap",
+    ],
+)
+
 cc_library(
     name = "vm",
     srcs = ["vm.cc"],
@@ -45,6 +66,7 @@ cc_library(
     deps = [
         ":chunk",
         ":debug",
+        ":heap_manager",
         ":obj_string",
         ":value",
         "//src:debug_flags",
