@@ -93,5 +93,7 @@ cc_library(
     srcs = ["object.cc"],
     hdrs = ["object.h"],
     deps = [
+        "//src/vm:chunk",
+        "//src/vm/gc:heap_obj",
     ],
 )

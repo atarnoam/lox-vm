@@ -7,6 +7,8 @@ ObjString::ObjString(std::string s)
 
 ObjString::operator std::string() const { return string; }
 
+const std::string &ObjString::str() const { return string; }
+
 bool ObjString::operator==(const ObjString &other) const {
     return string == other.string;
 }

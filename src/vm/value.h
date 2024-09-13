@@ -7,7 +7,7 @@
 #include "src/vm/gc/heap_obj.h"
 #include "src/vm/object.h"
 
-enum struct ValueType { BOOL, NIL, NUMBER, STRING };
+enum struct ValueType { BOOL, NIL, NUMBER, STRING, FUNCTION };
 
 struct Value {
     /// @brief Initialize to nil.
@@ -15,6 +15,7 @@ struct Value {
     Value(bool boolean);
     Value(double number);
     Value(heap_ptr<ObjString> string);
+    Value(heap_ptr<ObjFunction> function);
 
     Value(const Value &other);
 
@@ -23,17 +24,20 @@ struct Value {
     bool as_bool() const;
     double as_number() const;
     heap_ptr<ObjString> as_string() const;
+    heap_ptr<ObjFunction> as_function() const;
+
+    /// @brief The only false types are nil and "false".
+    operator bool() const;
 
     operator double() const;
     operator heap_ptr<ObjString>() const;
+    operator heap_ptr<ObjFunction>() const;
 
     bool is_bool() const;
     bool is_nil() const;
     bool is_number() const;
     bool is_string() const;
-
-    /// @brief The only false types are nil and "false".
-    operator bool() const;
+    bool is_function() const;
 
     bool operator==(const Value &other) const;
 
@@ -43,11 +47,13 @@ struct Value {
         bool boolean;
         double number;
         heap_ptr<ObjString> string;
+        heap_ptr<ObjFunction> function;
 
         ValueU();
         ValueU(bool boolean);
         ValueU(double number);
         ValueU(heap_ptr<ObjString> string);
+        ValueU(heap_ptr<ObjFunction> function);
     } as;
 
 #ifndef __INTELLISENSE__
