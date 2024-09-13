@@ -4,7 +4,7 @@
 #include "src/vm/gc/heap.h"
 #include "src/vm/gc/heap_obj.h"
 #include "src/vm/heap_manager.h"
-#include "src/vm/obj_string.h"
+#include "src/vm/object.h"
 #include "src/vm/value.h"
 
 #include <fmt/format.h>

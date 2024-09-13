@@ -32,7 +32,7 @@ cc_library(
     srcs = ["value.cc"],
     hdrs = ["value.h"],
     deps = [
-        "//src/vm:obj_string",
+        "//src/vm:object",
         "//src/vm/gc:heap_obj",
         "@fmt",
     ],
@@ -67,7 +67,7 @@ cc_library(
         ":chunk",
         ":debug",
         ":heap_manager",
-        ":obj_string",
+        ":object",
         ":value",
         "//src:debug_flags",
         "//src/compiler",
@@ -89,9 +89,9 @@ cc_test(
 )
 
 cc_library(
-    name = "obj_string",
-    srcs = ["obj_string.cc"],
-    hdrs = ["obj_string.h"],
+    name = "object",
+    srcs = ["object.cc"],
+    hdrs = ["object.h"],
     deps = [
     ],
 )

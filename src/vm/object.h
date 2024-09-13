@@ -1,22 +1,28 @@
 #pragma once
 
 #include <string>
+#include <type_traits>
+#include <utility>
 
-struct Obj {
-    virtual ~Obj() = default;
+namespace object {
+constinit inline auto hash_func = std::hash<std::string>{};
+using hash_t = std::invoke_result_t<decltype(hash_func), std::string>;
+}; // namespace object
 
-    virtual std::string to_string() const;
-    virtual bool operator==(const Obj &other) const;
-};
+struct ObjString {
+    ObjString(std::string s);
 
-struct ObjString : Obj {
-    ObjString(std::string string);
+    operator std::string() const;
 
-    operator const std::string() const;
+    bool operator==(const ObjString &other) const;
 
-    std::string to_string() const override;
-    bool operator==(const Obj &other) const override;
+    object::hash_t hash() const;
 
   private:
     std::string string;
+    object::hash_t m_hash;
+};
+
+struct ObjStringHash {
+    object::hash_t operator()(const ObjString &string);
 };
