@@ -2,6 +2,7 @@
 
 #include "src/syntactics/parser.h"
 #include "src/vm/chunk.h"
+#include "src/vm/heap_manager.h"
 #include "src/vm/value.h"
 
 #include <optional>
@@ -26,8 +27,7 @@ enum struct Precedence {
 Precedence operator+(Precedence precedence, int other);
 
 struct Compiler {
-
-    Compiler(const std::string &source);
+    Compiler(HeapManager &heap_manager, const std::string &source);
 
     std::optional<Chunk> compile();
 
@@ -38,6 +38,7 @@ struct Compiler {
     void unary();
     void binary();
     void literal();
+    void string();
 
   private:
     Chunk &current_chunk();
@@ -54,6 +55,7 @@ struct Compiler {
 
     void parse_precedence(Precedence precedence);
 
+    HeapManager &heap_manager;
     Parser parser;
     // Change to unique_ptr?
     Chunk compiling_chunk;

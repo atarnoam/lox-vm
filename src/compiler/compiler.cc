@@ -14,8 +14,8 @@ Precedence operator+(Precedence precedence, int other) {
     return static_cast<Precedence>(static_cast<int>(precedence) + other);
 }
 
-Compiler::Compiler(const std::string &source)
-    : parser(source), compiling_chunk() {}
+Compiler::Compiler(HeapManager &heap_manager, const std::string &source)
+    : heap_manager(heap_manager), parser(source), compiling_chunk() {}
 
 std::optional<Chunk> Compiler::compile() {
     parser.advance();
@@ -120,6 +120,11 @@ void Compiler::literal() {
     }
 }
 
+void Compiler::string() {
+    auto lexeme = parser.previous.lexeme;
+    emit_constant(heap_manager.initialize(lexeme.substr(1, lexeme.size() - 2)));
+}
+
 Chunk &Compiler::current_chunk() { return compiling_chunk; }
 
 void Compiler::end_compilation() {
@@ -201,7 +206,7 @@ constinit ParseRule rules[]{
     [TOKEN(LESS)] = {nullptr, FUNC(binary), Precedence::COMPARISON},
     [TOKEN(LESS_EQUAL)] = {nullptr, FUNC(binary), Precedence::COMPARISON},
     [TOKEN(IDENTIFIER)] = {nullptr, nullptr, Precedence::NONE},
-    [TOKEN(STRING)] = {nullptr, nullptr, Precedence::NONE},
+    [TOKEN(STRING)] = {FUNC(string), nullptr, Precedence::NONE},
     [TOKEN(NUMBER)] = {FUNC(number), nullptr, Precedence::NONE},
     [TOKEN(AND)] = {nullptr, nullptr, Precedence::NONE},
     [TOKEN(CLASS)] = {nullptr, nullptr, Precedence::NONE},

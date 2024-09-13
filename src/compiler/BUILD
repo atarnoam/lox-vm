@@ -9,6 +9,7 @@ cc_library(
         "//src/syntactics:parser",
         "//src/vm:chunk",
         "//src/vm:debug",
+        "//src/vm:heap_manager",
         "//src/vm:value",
         "@fmt",
     ],
