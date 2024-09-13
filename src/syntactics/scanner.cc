@@ -90,7 +90,7 @@ Token Scanner::make_token(TokenType type) const {
     return Token(type, current_lexeme(), line);
 }
 
-Token Scanner::error_token(const std::string &message) const {
+Token Scanner::error_token(const char *message) const {
     return Token(TokenType::ERROR, message, line);
 }
 
@@ -153,8 +153,9 @@ Token Scanner::string() {
         advance();
     }
 
-    if (is_at_end())
+    if (is_at_end()) {
         return error_token("Unterminated string.");
+    }
 
     // The closing quote.
     advance();

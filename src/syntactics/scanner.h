@@ -17,7 +17,10 @@ struct Scanner {
   private:
     std::string_view current_lexeme() const;
     Token make_token(TokenType type) const;
-    Token error_token(const std::string &message) const;
+    /** This is char* and not std::string because the `Token`'s string_view will
+     * point to it, so we need it to be a constant global.
+     */
+    Token error_token(const char *message) const;
 
     void skip_whitespace();
 
