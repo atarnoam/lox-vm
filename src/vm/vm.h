@@ -26,12 +26,12 @@ using Stack = std::vector<Value>;
 
 struct CallFrame {
     CallFrame(heap_ptr<ObjFunction> function, CodeVec::const_iterator ip,
-              Stack::const_iterator slots);
+              size_t slots);
     Chunk &chunk();
 
     heap_ptr<ObjFunction> function;
     CodeVec::const_iterator ip;
-    Stack::const_iterator slots;
+    const size_t slots;
 };
 
 struct VM {

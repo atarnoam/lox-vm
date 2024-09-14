@@ -57,11 +57,11 @@ InterpretResult VM::run() {
         } break;
         case OpCode::GET_LOCAL: {
             const_ref_t slot = read_byte(frame).constant_ref;
-            emplace(stack[slot]);
+            emplace(stack[frame->slots + slot]);
         } break;
         case OpCode::SET_LOCAL: {
             const_ref_t slot = read_byte(frame).constant_ref;
-            stack[slot] = peek(0);
+            stack[frame->slots + slot] = peek(0);
         } break;
         case OpCode::GET_GLOBAL: {
             auto name = read_string(frame);
@@ -164,22 +164,22 @@ InterpretResult VM::run() {
             if (!call_value(peek(arg_count), arg_count)) {
                 RETURN_ERROR();
             }
-            std::cout << "jumping" << std::endl;
             // This is the "jump".
             frame = &frames.back();
-            std::cout << "jumped" << std::endl;
-            std::cout << "FF " << frame->slots - stack.begin() << std::endl;
         } break;
         case OpCode::RETURN: {
             Value returned = pop();
+            size_t last_slot = frame->slots;
+
+            // After this, `frame` is invalidated!
             frames.pop_back();
+
             if (frames.size() == 0) {
                 pop();
                 result = InterpretResult::OK;
                 goto DONE;
             }
-
-            stack.resize(frame->slots - stack.begin());
+            stack.resize(last_slot);
             push(returned);
             frame = &frames.back();
         } break;
@@ -244,9 +244,8 @@ bool VM::call(heap_ptr<ObjFunction> function, int arg_count) {
         runtime_error("Stack overflow.");
         return false;
     }
-
     frames.emplace_back(function, function->chunk.code.begin(),
-                        stack.end() - arg_count - 1);
+                        stack.end() - arg_count - 1 - stack.begin());
     return true;
 }
 
@@ -273,7 +272,7 @@ InterpretResult interpret(VM &vm, const std::string &source) {
 }
 
 CallFrame::CallFrame(heap_ptr<ObjFunction> function, CodeVec::const_iterator ip,
-                     Stack::const_iterator slots)
-    : function(function), ip(std::move(ip)), slots(std::move(slots)) {}
+                     size_t slots)
+    : function(function), ip(std::move(ip)), slots(slots) {}
 
 Chunk &CallFrame::chunk() { return function->chunk; }

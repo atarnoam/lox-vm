@@ -1,4 +1,6 @@
-fun f() {
+fun f(a, b) {
+    print "hihi";
+    print a - b;
 }
 
-print f();
+f(102, 53);
