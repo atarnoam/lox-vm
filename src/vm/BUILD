@@ -12,7 +12,7 @@ cc_library(
     hdrs = ["chunk.h"],
     deps = [
         ":code",
-        ":value",
+        ":value_h",
     ],
 )
 
@@ -28,11 +28,23 @@ cc_library(
 )
 
 cc_library(
-    name = "value",
-    srcs = ["value.cc"],
+    name = "value_h",
     hdrs = ["value.h"],
     deps = [
+        "//src/vm:obj_function_fwd",
         "//src/vm:object",
+        "//src/vm/gc:heap_obj",
+        "@fmt",
+    ],
+)
+
+cc_library(
+    name = "value",
+    srcs = ["value.cc"],
+    deps = [
+        "//src/vm:obj_function",
+        "//src/vm:object",
+        "//src/vm:value_h",
         "//src/vm/gc:heap_obj",
         "@fmt",
     ],
@@ -93,7 +105,24 @@ cc_library(
     srcs = ["object.cc"],
     hdrs = ["object.h"],
     deps = [
+    ],
+)
+
+cc_library(
+    name = "obj_function_fwd",
+    hdrs = ["obj_function.fwd.h"],
+    deps = [
+    ],
+)
+
+cc_library(
+    name = "obj_function",
+    srcs = ["obj_function.cc"],
+    hdrs = ["obj_function.h"],
+    deps = [
         "//src/vm:chunk",
+        "//src/vm:obj_function_fwd",
+        "//src/vm:object",
         "//src/vm/gc:heap_obj",
     ],
 )

@@ -62,8 +62,15 @@ jump_off_t get_jump_off(const PtrT &it) {
  * from. This is a syntactic type, and thus `Value`s are not held here.
  */
 struct CodeChunk {
-
     CodeChunk() = default;
+
+    CodeChunk(const CodeChunk &other) = delete;
+    CodeChunk &operator=(const CodeChunk &other) = delete;
+
+    CodeChunk(CodeChunk &&other) = default;
+    CodeChunk &operator=(CodeChunk &&other) = default;
+
+    virtual ~CodeChunk() = default;
 
     void write(InstructionData instruction_data, int line);
 

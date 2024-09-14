@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "src/vm/gc/heap_obj.h"
+#include "src/vm/obj_function.fwd.h"
 #include "src/vm/object.h"
 
 enum struct ValueType { BOOL, NIL, NUMBER, STRING, FUNCTION };
@@ -77,7 +78,7 @@ constinit inline auto STRING_EQ = [](heap_ptr<ObjString> string1,
 
 /** Used for string interning. */
 using StringMap = std::unordered_map<std::string, heap_ptr<ObjString>,
-                                     decltype(object::hash_func)>;
+                                     decltype(object::str_hash_func)>;
 
 using VariableMap =
     std::unordered_map<heap_ptr<ObjString>, Value, decltype(STRING_HASH),

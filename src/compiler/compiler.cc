@@ -33,7 +33,7 @@ std::optional<Chunk> Compiler::compile() {
     if (parser.had_error()) {
         return std::nullopt;
     }
-    return compiling_chunk;
+    return std::move(compiling_chunk);
 }
 
 void Compiler::expression() { parse_precedence(Precedence::ASSIGNMENT); }

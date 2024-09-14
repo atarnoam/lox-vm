@@ -40,6 +40,8 @@ struct Local {
     int depth;
 };
 
+enum struct FunctionType { FUNCTION, SCRIPT };
+
 struct Compiler {
     Compiler(HeapManager &heap_manager, const std::string &source);
 

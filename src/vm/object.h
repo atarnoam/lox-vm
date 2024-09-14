@@ -4,12 +4,9 @@
 #include <type_traits>
 #include <utility>
 
-#include "src/vm/chunk.h"
-#include "src/vm/gc/heap_obj.h"
-
 namespace object {
-constinit inline auto hash_func = std::hash<std::string>{};
-using hash_t = std::invoke_result_t<decltype(hash_func), std::string>;
+constinit inline auto str_hash_func = std::hash<std::string>{};
+using hash_t = std::invoke_result_t<decltype(str_hash_func), std::string>;
 }; // namespace object
 
 struct ObjString {
@@ -29,10 +26,4 @@ struct ObjString {
 
 struct ObjStringHash {
     object::hash_t operator()(const ObjString &string);
-};
-
-struct ObjFunction {
-    int arity;
-    Chunk chunk;
-    heap_ptr<ObjString> name;
 };

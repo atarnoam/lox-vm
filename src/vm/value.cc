@@ -1,6 +1,6 @@
-#include "src/vm/value.h"
 #include "value.h"
 
+#include "src/vm/obj_function.h"
 #include <fmt/format.h>
 
 Value::Value() : m_type(ValueType::NIL) {}

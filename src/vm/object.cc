@@ -3,7 +3,7 @@
 using namespace object;
 
 ObjString::ObjString(std::string s)
-    : string(std::move(s)), m_hash(hash_func(string)) {}
+    : string(std::move(s)), m_hash(str_hash_func(string)) {}
 
 ObjString::operator std::string() const { return string; }
 
