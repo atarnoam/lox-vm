@@ -15,9 +15,10 @@ struct HeapManager {
     Value initialize(const std::string &string);
     Value initialize(const std::string_view &string);
 
-    heap_ptr<ObjFunction> new_function(int arity = 0);
-    heap_ptr<ObjFunction> new_function(int arity, heap_ptr<ObjString> name);
-    heap_ptr<ObjFunction> new_function(int arity, const std::string &name);
+    heap_ptr<ObjFunction> new_function();
+    heap_ptr<ObjFunction> new_function(heap_ptr<ObjString> name);
+    heap_ptr<ObjFunction> new_function(const std::string &name);
+    heap_ptr<ObjFunction> new_function(const std::string_view &name);
 
   private:
     Heap heap;

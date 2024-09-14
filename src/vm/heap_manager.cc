@@ -18,16 +18,18 @@ Value HeapManager::initialize(const std::string_view &string) {
     return initialize(std::string(string));
 }
 
-heap_ptr<ObjFunction> HeapManager::new_function(int arity) {
-    return new_function(arity, heap_ptr<ObjString>(nullptr));
+heap_ptr<ObjFunction> HeapManager::new_function() {
+    return new_function(heap_ptr<ObjString>(nullptr));
 }
 
-heap_ptr<ObjFunction> HeapManager::new_function(int arity,
-                                                heap_ptr<ObjString> name) {
-    return heap.make<ObjFunction>(arity, name);
+heap_ptr<ObjFunction> HeapManager::new_function(heap_ptr<ObjString> name) {
+    return heap.make<ObjFunction>(0, name, std::move(Chunk{}));
 }
 
-heap_ptr<ObjFunction> HeapManager::new_function(int arity,
-                                                const std::string &name) {
-    return new_function(arity, initialize(name));
+heap_ptr<ObjFunction> HeapManager::new_function(const std::string &name) {
+    return new_function(initialize(name));
+}
+
+heap_ptr<ObjFunction> HeapManager::new_function(const std::string_view &name) {
+    return new_function(initialize(name));
 }

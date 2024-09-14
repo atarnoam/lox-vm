@@ -44,7 +44,8 @@ struct Local {
 enum struct FunctionType { FUNCTION, SCRIPT };
 
 struct Compiler {
-    Compiler(HeapManager &heap_manager, Parser &parser);
+    Compiler(HeapManager &heap_manager, Parser &parser,
+             FunctionType type = FunctionType::SCRIPT);
 
     std::optional<heap_ptr<ObjFunction>> compile();
 

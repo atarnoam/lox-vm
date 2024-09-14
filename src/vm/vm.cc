@@ -13,7 +13,9 @@ InterpretResult VM::run_script(heap_ptr<ObjFunction> main) {
     stack.emplace_back(main);
     InterpretResult result = run();
     frames.pop_back();
-    stack.pop_back();
+    if (result == InterpretResult::OK) {
+        stack.pop_back();
+    }
     return result;
 }
 

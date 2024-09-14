@@ -19,10 +19,13 @@ Token empty_token() { return {TokenType::END_OF_FILE, "", 0}; }
 
 Local empty_local() { return {empty_token(), 0}; }
 
-Compiler::Compiler(HeapManager &heap_manager, Parser &parser)
+Compiler::Compiler(HeapManager &heap_manager, Parser &parser, FunctionType type)
     : heap_manager(heap_manager), parser(parser), locals({empty_local()}),
-      scope_depth(0), compiling_function(heap_manager.new_function()),
-      type(FunctionType::SCRIPT) {}
+      scope_depth(0), compiling_function(type == FunctionType::SCRIPT
+                                             ? heap_manager.new_function()
+                                             : heap_manager.new_function(
+                                                   parser.previous.lexeme)),
+      type(type) {}
 
 std::optional<heap_ptr<ObjFunction>> Compiler::compile() {
     parser.advance();
@@ -81,17 +84,28 @@ void Compiler::declaration() {
 }
 
 void Compiler::function(FunctionType type) {
-    Compiler compiler{heap_manager, parser};
+    Compiler compiler{heap_manager, parser, type};
     compiler.begin_scope();
 
     parser.consume(TokenType::LEFT_PAREN, "Expect '(' after function name.");
+    if (!parser.check(TokenType::RIGHT_PAREN)) {
+        do {
+            compiler.compiling_function->arity++;
+            if (compiler.compiling_function->arity > 255) {
+                parser.error_at_current("Can't have more than 255 parameters.");
+            }
+            const_ref_t constant =
+                compiler.parse_variable("Expect parameter name.");
+            compiler.define_variable(constant);
+        } while (parser.match(TokenType::COMMA));
+    }
     parser.consume(TokenType::RIGHT_PAREN, "Expect ')' after parameters.");
     parser.consume(TokenType::LEFT_BRACE, "Expect '{' before function body.");
 
     compiler.block();
 
     compiler.end_scope();
-    auto function = end_compilation();
+    auto function = compiler.end_compilation();
     emit_constant(function);
 }
 
