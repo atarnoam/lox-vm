@@ -31,10 +31,11 @@ enum struct OpCode : int8_t {
     JUMP_IF_FALSE,
     JUMP_IF_TRUE,
     LOOP,
+    CALL,
     RETURN
 };
 
-using const_ref_t = int8_t;
+using const_ref_t = uint8_t;
 using jump_off_t = uint16_t;
 
 union InstructionData {

@@ -59,6 +59,7 @@ struct Compiler {
     void variable(bool can_assign);
     void and_(bool can_assign);
     void or_(bool can_assign);
+    void call(bool can_assign);
 
   private:
     void expression();
@@ -112,6 +113,8 @@ struct Compiler {
     // Mark last variable defined as initialized, with depth the current scope
     // depth.
     void mark_initialized_last();
+
+    size_t argument_list();
 
     void patch_jump(int offset);
 

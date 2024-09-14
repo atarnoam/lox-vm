@@ -1,2 +1,4 @@
-var a = a;
-var a = 2;
+fun f() {
+}
+
+print f();

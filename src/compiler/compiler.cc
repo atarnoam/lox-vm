@@ -11,6 +11,9 @@
 
 extern constinit ParseRule rules[];
 
+constexpr auto CONST_REF_T_MAX = std::numeric_limits<const_ref_t>::max();
+constexpr auto JUMP_OFF_T_MAX = std::numeric_limits<jump_off_t>::max();
+
 Precedence operator+(Precedence precedence, int other) {
     return static_cast<Precedence>(static_cast<int>(precedence) + other);
 }
@@ -84,6 +87,10 @@ void Compiler::declaration() {
 }
 
 void Compiler::function(FunctionType type) {
+    static const std::string error_message =
+        std::string("Can't have more than ") + std::to_string(CONST_REF_T_MAX) +
+        " parameters.";
+
     Compiler compiler{heap_manager, parser, type};
     compiler.begin_scope();
 
@@ -91,8 +98,8 @@ void Compiler::function(FunctionType type) {
     if (!parser.check(TokenType::RIGHT_PAREN)) {
         do {
             compiler.compiling_function->arity++;
-            if (compiler.compiling_function->arity > 255) {
-                parser.error_at_current("Can't have more than 255 parameters.");
+            if (compiler.compiling_function->arity > CONST_REF_T_MAX) {
+                parser.error_at_current(error_message);
             }
             const_ref_t constant =
                 compiler.parse_variable("Expect parameter name.");
@@ -351,6 +358,11 @@ void Compiler::or_(bool can_assign) {
     patch_jump(end_jump);
 }
 
+void Compiler::call(bool can_assign) {
+    const_ref_t arg_count = argument_list();
+    emit(OpCode::CALL, arg_count);
+}
+
 void Compiler::declare_variable() {
     Token name = parser.previous;
 
@@ -393,7 +405,7 @@ void Compiler::define_variable(const_ref_t global) {
 }
 
 void Compiler::add_local(const Token &name) {
-    if (locals.size() >= std::numeric_limits<const_ref_t>::max()) {
+    if (locals.size() >= CONST_REF_T_MAX) {
         parser.error("Too many local variables in function.");
         return;
     }
@@ -404,6 +416,7 @@ void Compiler::add_local(const Token &name) {
 Chunk &Compiler::current_chunk() { return compiling_function->chunk; }
 
 heap_ptr<ObjFunction> Compiler::end_compilation() {
+    emit(OpCode::NIL);
     emit_return();
     if constexpr (DEBUG_PRINT_CODE) {
         if (!parser.had_error()) {
@@ -449,7 +462,7 @@ int Compiler::emit_jump_value() {
 void Compiler::emit_loop(int loop_start) {
     emit(OpCode::LOOP);
     int offset = current_chunk().code.size() - loop_start + sizeof(jump_off_t);
-    if (offset > std::numeric_limits<jump_off_t>::max()) {
+    if (offset > JUMP_OFF_T_MAX) {
         parser.error("Loop body too large.");
     }
 
@@ -458,7 +471,7 @@ void Compiler::emit_loop(int loop_start) {
 
 const_ref_t Compiler::make_constant(const Value &value) {
     int constant_ref = current_chunk().add_constant(value);
-    if (constant_ref > std::numeric_limits<const_ref_t>::max()) {
+    if (constant_ref > CONST_REF_T_MAX) {
         // Not really a parser error, but we use the parser for bookkeeping
         // errors.
         parser.error("Too many constants in one chunk.");
@@ -515,11 +528,31 @@ void Compiler::mark_initialized_last() {
     locals.back().mark_initialized(scope_depth);
 }
 
+size_t Compiler::argument_list() {
+    size_t arg_count = 0;
+
+    const static std::string error_message =
+        std::string("Can't have more than ") + std::to_string(CONST_REF_T_MAX) +
+        " arguments.";
+
+    if (!parser.check(TokenType::RIGHT_PAREN)) {
+        do {
+            expression();
+            if (arg_count >= CONST_REF_T_MAX) {
+                parser.error(error_message);
+            }
+            arg_count++;
+        } while (parser.match(TokenType::COMMA));
+    }
+    parser.consume(TokenType::RIGHT_PAREN, "Expect ')' after arguments.");
+    return arg_count;
+}
+
 void Compiler::patch_jump(int offset) {
     // the minus to adjust for the bytecode for the jump offset itself.
     int jump = current_chunk().code.size() - offset - sizeof(jump_off_t);
 
-    if (jump > std::numeric_limits<jump_off_t>::max()) {
+    if (jump > JUMP_OFF_T_MAX) {
         parser.error("Too much code to jump over.");
     }
 
@@ -556,7 +589,7 @@ ParseRule &get_rule(TokenType token_type) {
 constinit ParseRule rules[]{
 #define TOKEN(x) static_cast<int>((TokenType::x))
 #define FUNC(f) &Compiler::f
-    [TOKEN(LEFT_PAREN)] = {FUNC(grouping), nullptr, Precedence::NONE},
+    [TOKEN(LEFT_PAREN)] = {FUNC(grouping), FUNC(call), Precedence::CALL},
     [TOKEN(RIGHT_PAREN)] = {nullptr, nullptr, Precedence::NONE},
     [TOKEN(LEFT_BRACE)] = {nullptr, nullptr, Precedence::NONE},
     [TOKEN(RIGHT_BRACE)] = {nullptr, nullptr, Precedence::NONE},

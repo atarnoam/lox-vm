@@ -95,6 +95,8 @@ int disassemble_instruction(Chunk &chunk, int offset) {
         return jump_instruction("JUMP_IF_TRUE", 1, chunk, offset);
     case OpCode::LOOP:
         return jump_instruction("LOOP", -1, chunk, offset);
+    case OpCode::CALL:
+        return byte_instruction("CALL", chunk, offset);
     default:
         std::cout << fmt::format("Unknown opcode {}\n",
                                  static_cast<int>(instruction));

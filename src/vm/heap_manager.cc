@@ -23,7 +23,7 @@ heap_ptr<ObjFunction> HeapManager::new_function() {
 }
 
 heap_ptr<ObjFunction> HeapManager::new_function(heap_ptr<ObjString> name) {
-    return heap.make<ObjFunction>(0, name, std::move(Chunk{}));
+    return heap.make<ObjFunction>(0, name);
 }
 
 heap_ptr<ObjFunction> HeapManager::new_function(const std::string &name) {
