@@ -6,6 +6,6 @@
 
 struct ObjFunction {
     int arity;
-    Chunk chunk;
     heap_ptr<ObjString> name;
+    Chunk chunk;
 };

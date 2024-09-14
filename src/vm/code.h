@@ -58,8 +58,10 @@ jump_off_t get_jump_off(const PtrT &it) {
     return *as_jump_ptr(&(*it));
 }
 
-/** A code chunk is a chunk that holds just code, and the line numbers they came
- * from. This is a syntactic type, and thus `Value`s are not held here.
+using CodeVec = std::vector<InstructionData>;
+
+/** A code chunk is a chunk that holds just code, and the line numbers they
+ * came from. This is a syntactic type, and thus `Value`s are not held here.
  */
 struct CodeChunk {
     CodeChunk() = default;
@@ -93,7 +95,7 @@ struct CodeChunk {
         decltype(lines)::const_iterator last_line;
         int last_instruction;
     };
-    std::vector<InstructionData> code;
+    CodeVec code;
 
   private:
     LineData lines;

@@ -3,6 +3,7 @@
 #include "src/syntactics/parser.h"
 #include "src/vm/chunk.h"
 #include "src/vm/heap_manager.h"
+#include "src/vm/obj_function.h"
 #include "src/vm/value.h"
 
 #include <optional>
@@ -45,7 +46,7 @@ enum struct FunctionType { FUNCTION, SCRIPT };
 struct Compiler {
     Compiler(HeapManager &heap_manager, const std::string &source);
 
-    std::optional<Chunk> compile();
+    std::optional<heap_ptr<ObjFunction>> compile();
 
     // Expressions. These are public for the `rules` table.
     void number(bool can_assign);
@@ -111,10 +112,10 @@ struct Compiler {
 
     HeapManager &heap_manager;
     Parser parser;
-    // Change to unique_ptr?
-    Chunk compiling_chunk;
     std::vector<Local> locals;
     int scope_depth;
+    heap_ptr<ObjFunction> function;
+    FunctionType type;
 };
 
 struct ParseRule {

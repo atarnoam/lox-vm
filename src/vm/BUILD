@@ -66,6 +66,7 @@ cc_library(
     srcs = ["heap_manager.cc"],
     hdrs = ["heap_manager.h"],
     deps = [
+        "//src/vm:obj_function",
         "//src/vm:value",
         "//src/vm/gc:heap",
     ],
@@ -83,6 +84,7 @@ cc_library(
         ":value",
         "//src:debug_flags",
         "//src/compiler",
+        "//src/vm:obj_function",
         "//src/vm/gc:heap",
         "//src/vm/gc:heap_obj",
         "@fmt",

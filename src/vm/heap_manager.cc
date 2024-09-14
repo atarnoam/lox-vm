@@ -17,3 +17,17 @@ Value HeapManager::initialize(const std::string &string) {
 Value HeapManager::initialize(const std::string_view &string) {
     return initialize(std::string(string));
 }
+
+heap_ptr<ObjFunction> HeapManager::new_function(int arity) {
+    return new_function(arity, heap_ptr<ObjString>(nullptr));
+}
+
+heap_ptr<ObjFunction> HeapManager::new_function(int arity,
+                                                heap_ptr<ObjString> name) {
+    return heap.make<ObjFunction>(arity, name);
+}
+
+heap_ptr<ObjFunction> HeapManager::new_function(int arity,
+                                                const std::string &name) {
+    return new_function(arity, initialize(name));
+}

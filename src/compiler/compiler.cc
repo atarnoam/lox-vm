@@ -15,11 +15,16 @@ Precedence operator+(Precedence precedence, int other) {
     return static_cast<Precedence>(static_cast<int>(precedence) + other);
 }
 
-Compiler::Compiler(HeapManager &heap_manager, const std::string &source)
-    : heap_manager(heap_manager), parser(source), compiling_chunk(), locals(),
-      scope_depth(0) {}
+Token empty_token() { return {TokenType::END_OF_FILE, "", 0}; }
 
-std::optional<Chunk> Compiler::compile() {
+Local empty_local() { return {empty_token(), 0}; }
+
+Compiler::Compiler(HeapManager &heap_manager, const std::string &source)
+    : heap_manager(heap_manager), parser(source), locals({empty_local()}),
+      scope_depth(0), function(heap_manager.new_function()),
+      type(FunctionType::SCRIPT) {}
+
+std::optional<heap_ptr<ObjFunction>> Compiler::compile() {
     parser.advance();
     while (!parser.match(TokenType::END_OF_FILE)) {
         declaration();
@@ -33,7 +38,7 @@ std::optional<Chunk> Compiler::compile() {
     if (parser.had_error()) {
         return std::nullopt;
     }
-    return std::move(compiling_chunk);
+    return function;
 }
 
 void Compiler::expression() { parse_precedence(Precedence::ASSIGNMENT); }
@@ -105,7 +110,7 @@ void Compiler::if_statement() {
 }
 
 void Compiler::while_statement() {
-    int loop_start = compiling_chunk.code.size();
+    int loop_start = current_chunk().code.size();
 
     parser.consume(TokenType::LEFT_PAREN, "Expect '(' after 'while'.");
     expression();
@@ -130,7 +135,7 @@ void Compiler::for_statement() {
     } else {
         expression_statement();
     }
-    int loop_start = compiling_chunk.code.size();
+    int loop_start = current_chunk().code.size();
     // TODO: change to optional?
     int exit_jump = -1;
     if (!parser.match(TokenType::SEMICOLON)) {
@@ -145,7 +150,7 @@ void Compiler::for_statement() {
 
     if (!parser.match(TokenType::RIGHT_PAREN)) {
         int body_jump = emit_jump(OpCode::JUMP);
-        int incrementStart = compiling_chunk.code.size();
+        int incrementStart = current_chunk().code.size();
         expression();
         emit(OpCode::POP);
         parser.consume(TokenType::RIGHT_PAREN, "Expect ')' after for clauses.");
@@ -356,13 +361,16 @@ void Compiler::add_local(const Token &name) {
     locals.emplace_back(name, -1);
 }
 
-Chunk &Compiler::current_chunk() { return compiling_chunk; }
+Chunk &Compiler::current_chunk() { return function->chunk; }
 
 void Compiler::end_compilation() {
     emit_return();
     if constexpr (DEBUG_PRINT_CODE) {
         if (!parser.had_error()) {
-            disassemble_chunk(current_chunk(), "code");
+            disassemble_chunk(current_chunk(),
+                              function->name != heap_ptr<ObjString>(nullptr)
+                                  ? function->name->str()
+                                  : "<script>");
         }
     }
 }
@@ -383,12 +391,12 @@ int Compiler::emit_jump_value(jump_off_t value) {
     int jump_offset = emit_jump_value();
     // We might be able to write it without initializing-then-setting, but
     // whatever.
-    compiling_chunk.jump_at(jump_offset) = value;
+    current_chunk().jump_at(jump_offset) = value;
     return jump_offset;
 }
 
 int Compiler::emit_jump_value() {
-    int offset = compiling_chunk.code.size();
+    int offset = current_chunk().code.size();
     for (size_t i = 0; i < sizeof(jump_off_t); ++i) {
         emit(0xff);
     }
@@ -397,7 +405,7 @@ int Compiler::emit_jump_value() {
 
 void Compiler::emit_loop(int loop_start) {
     emit(OpCode::LOOP);
-    int offset = compiling_chunk.code.size() - loop_start + sizeof(jump_off_t);
+    int offset = current_chunk().code.size() - loop_start + sizeof(jump_off_t);
     if (offset > std::numeric_limits<jump_off_t>::max()) {
         parser.error("Loop body too large.");
     }
@@ -460,13 +468,13 @@ void Compiler::named_variable(const Token &name, bool can_assign) {
 
 void Compiler::patch_jump(int offset) {
     // the minus to adjust for the bytecode for the jump offset itself.
-    int jump = compiling_chunk.code.size() - offset - sizeof(jump_off_t);
+    int jump = current_chunk().code.size() - offset - sizeof(jump_off_t);
 
     if (jump > std::numeric_limits<jump_off_t>::max()) {
         parser.error("Too much code to jump over.");
     }
 
-    compiling_chunk.jump_at(offset) = jump;
+    current_chunk().jump_at(offset) = jump;
 }
 
 void Compiler::parse_precedence(Precedence precedence) {

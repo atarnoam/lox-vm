@@ -38,6 +38,7 @@ struct heap_ptr {
     T *operator->() { return &(ptr->obj); }
 
     bool operator==(heap_ptr<T> other) { return ptr == other.ptr; }
+    bool operator==(nullptr_t other) { return ptr == other; }
 
     // Note we don't delete ptr here.
     ~heap_ptr() = default;

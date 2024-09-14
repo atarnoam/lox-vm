@@ -83,6 +83,9 @@ std::ostream &operator<<(std::ostream &os, const Value &value) {
     case ValueType::STRING:
         return os << value.as_string()->str();
     case ValueType::FUNCTION:
+        if (value.as_function()->name == nullptr) {
+            return os << "<script>";
+        }
         return os << fmt::format("<fn {}>", value.as_function()->name->str());
     default:
         return os; // Unreachable

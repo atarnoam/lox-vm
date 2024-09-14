@@ -10,6 +10,7 @@ cc_library(
         "//src/vm:chunk",
         "//src/vm:debug",
         "//src/vm:heap_manager",
+        "//src/vm:obj_function",
         "//src/vm:value",
         "@fmt",
     ],
