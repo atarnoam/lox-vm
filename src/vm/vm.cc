@@ -214,7 +214,8 @@ void VM::print_stack() const {
 }
 
 InterpretResult interpret(VM &vm, const std::string &source) {
-    Compiler compiler(vm.get_heap_manager(), source);
+    Parser parser{source};
+    Compiler compiler{vm.get_heap_manager(), parser};
     auto func_opt = compiler.compile();
 
     if (!func_opt.has_value()) {

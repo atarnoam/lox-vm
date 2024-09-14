@@ -19,9 +19,9 @@ Token empty_token() { return {TokenType::END_OF_FILE, "", 0}; }
 
 Local empty_local() { return {empty_token(), 0}; }
 
-Compiler::Compiler(HeapManager &heap_manager, const std::string &source)
-    : heap_manager(heap_manager), parser(source), locals({empty_local()}),
-      scope_depth(0), function(heap_manager.new_function()),
+Compiler::Compiler(HeapManager &heap_manager, Parser &parser)
+    : heap_manager(heap_manager), parser(parser), locals({empty_local()}),
+      scope_depth(0), compiling_function(heap_manager.new_function()),
       type(FunctionType::SCRIPT) {}
 
 std::optional<heap_ptr<ObjFunction>> Compiler::compile() {
@@ -38,7 +38,7 @@ std::optional<heap_ptr<ObjFunction>> Compiler::compile() {
     if (parser.had_error()) {
         return std::nullopt;
     }
-    return function;
+    return compiling_function;
 }
 
 void Compiler::expression() { parse_precedence(Precedence::ASSIGNMENT); }
@@ -73,9 +73,26 @@ void Compiler::statement() {
 void Compiler::declaration() {
     if (parser.match(TokenType::VAR)) {
         var_declaration();
+    } else if (parser.match(TokenType::FUN)) {
+        fun_declaration();
     } else {
         statement();
     }
+}
+
+void Compiler::function(FunctionType type) {
+    Compiler compiler{heap_manager, parser};
+    compiler.begin_scope();
+
+    parser.consume(TokenType::LEFT_PAREN, "Expect '(' after function name.");
+    parser.consume(TokenType::RIGHT_PAREN, "Expect ')' after parameters.");
+    parser.consume(TokenType::LEFT_BRACE, "Expect '{' before function body.");
+
+    compiler.block();
+
+    compiler.end_scope();
+    auto function = end_compilation();
+    emit_constant(function);
 }
 
 void Compiler::print_statement() {
@@ -182,6 +199,15 @@ void Compiler::var_declaration() {
     parser.consume(TokenType::SEMICOLON,
                    "Expect ';' after variable declaration.");
 
+    define_variable(global);
+}
+
+void Compiler::fun_declaration() {
+    const_ref_t global = parse_variable("Expect function name.");
+    // Functions can be used
+    mark_initialized_last();
+
+    function(FunctionType::FUNCTION);
     define_variable(global);
 }
 
@@ -345,8 +371,8 @@ const_ref_t Compiler::parse_variable(const std::string &error_message) {
 
 void Compiler::define_variable(const_ref_t global) {
     if (scope_depth > 0) {
+        mark_initialized_last();
         // Local variables live on the stack.
-        locals.back().mark_initialized(scope_depth);
         return;
     }
     emit(OpCode::DEFINE_GLOBAL, global);
@@ -361,18 +387,21 @@ void Compiler::add_local(const Token &name) {
     locals.emplace_back(name, -1);
 }
 
-Chunk &Compiler::current_chunk() { return function->chunk; }
+Chunk &Compiler::current_chunk() { return compiling_function->chunk; }
 
-void Compiler::end_compilation() {
+heap_ptr<ObjFunction> Compiler::end_compilation() {
     emit_return();
     if constexpr (DEBUG_PRINT_CODE) {
         if (!parser.had_error()) {
             disassemble_chunk(current_chunk(),
-                              function->name != heap_ptr<ObjString>(nullptr)
-                                  ? function->name->str()
+                              compiling_function->name !=
+                                      heap_ptr<ObjString>(nullptr)
+                                  ? compiling_function->name->str()
                                   : "<script>");
         }
     }
+
+    return compiling_function;
 }
 
 void Compiler::emit_return() { emit(OpCode::RETURN); }
@@ -464,6 +493,12 @@ void Compiler::named_variable(const Token &name, bool can_assign) {
     } else {
         emit(get_op, arg);
     }
+}
+
+void Compiler::mark_initialized_last() {
+    if (scope_depth == 0)
+        return;
+    locals.back().mark_initialized(scope_depth);
 }
 
 void Compiler::patch_jump(int offset) {

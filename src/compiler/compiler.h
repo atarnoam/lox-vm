@@ -44,7 +44,7 @@ struct Local {
 enum struct FunctionType { FUNCTION, SCRIPT };
 
 struct Compiler {
-    Compiler(HeapManager &heap_manager, const std::string &source);
+    Compiler(HeapManager &heap_manager, Parser &parser);
 
     std::optional<heap_ptr<ObjFunction>> compile();
 
@@ -65,6 +65,8 @@ struct Compiler {
     void statement();
     void declaration();
 
+    void function(FunctionType type);
+
     // Statements
     void print_statement();
     void expression_statement();
@@ -72,6 +74,7 @@ struct Compiler {
     void while_statement();
     void for_statement();
     void var_declaration();
+    void fun_declaration();
 
     void begin_scope();
     void end_scope();
@@ -83,7 +86,7 @@ struct Compiler {
 
     Chunk &current_chunk();
 
-    void end_compilation();
+    heap_ptr<ObjFunction> end_compilation();
 
     template <typename... Args>
     requires(std::convertible_to<Args, InstructionData> and...) void emit(
@@ -105,16 +108,19 @@ struct Compiler {
     std::optional<const_ref_t> resolve_local(const Token &name);
 
     void named_variable(const Token &name, bool can_assign);
+    // Mark last variable defined as initialized, with depth the current scope
+    // depth.
+    void mark_initialized_last();
 
     void patch_jump(int offset);
 
     void parse_precedence(Precedence precedence);
 
     HeapManager &heap_manager;
-    Parser parser;
+    Parser &parser;
     std::vector<Local> locals;
     int scope_depth;
-    heap_ptr<ObjFunction> function;
+    heap_ptr<ObjFunction> compiling_function;
     FunctionType type;
 };
 
