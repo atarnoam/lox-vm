@@ -63,6 +63,8 @@ void Compiler::statement() {
         print_statement();
     } else if (parser.match(TokenType::IF)) {
         if_statement();
+    } else if (parser.match(TokenType::RETURN)) {
+        return_statement();
     } else if (parser.match(TokenType::WHILE)) {
         while_statement();
     } else if (parser.match(TokenType::FOR)) {
@@ -207,6 +209,20 @@ void Compiler::for_statement() {
     }
 
     end_scope();
+}
+
+void Compiler::return_statement() {
+    if (type == FunctionType::SCRIPT) {
+        parser.error("Can't return from top-level code.");
+    }
+
+    if (parser.match(TokenType::SEMICOLON)) {
+        emit_return();
+    } else {
+        expression();
+        parser.consume(TokenType::SEMICOLON, "Expect ';' after return value.");
+        emit(OpCode::RETURN);
+    }
 }
 
 void Compiler::var_declaration() {

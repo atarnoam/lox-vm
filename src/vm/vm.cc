@@ -9,8 +9,8 @@
 VM::VM(InterpretMode interpret_mode) : m_interpret_mode(interpret_mode) {}
 
 InterpretResult VM::run_script(heap_ptr<ObjFunction> main) {
-    call(main, 0);
     stack.emplace_back(main);
+    call(main, 0);
     InterpretResult result = run();
     return result;
 }

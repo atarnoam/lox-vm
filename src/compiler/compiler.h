@@ -75,6 +75,8 @@ struct Compiler {
     void if_statement();
     void while_statement();
     void for_statement();
+    void return_statement();
+
     void var_declaration();
     void fun_declaration();
 
