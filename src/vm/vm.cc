@@ -3,10 +3,14 @@
 #include "src/compiler/compiler.h"
 #include "src/debug_flags.h"
 #include "src/vm/debug.h"
+#include "src/vm/natives.h"
 
+#include <functional>
 #include <optional>
 
-VM::VM(InterpretMode interpret_mode) : m_interpret_mode(interpret_mode) {}
+VM::VM(InterpretMode interpret_mode) : m_interpret_mode(interpret_mode) {
+    define_all_natives();
+}
 
 InterpretResult VM::run_script(heap_ptr<ObjFunction> main) {
     stack.emplace_back(main);
@@ -222,10 +226,23 @@ heap_ptr<ObjString> VM::read_string(CallFrame *frame) {
     return read_constant(frame).as_string();
 }
 
+void VM::define_native(const std::string &name, const ObjNative &native) {
+    globals.emplace(heap_manager.initialize(name),
+                    heap_manager.initialize<ObjNative>(native));
+}
+
+void VM::define_all_natives() {
+    for (const auto &[name, native] : NATIVES) {
+        define_native(name, native);
+    }
+}
+
 bool VM::call_value(const Value &callee, int arg_count) {
     switch (callee.type()) {
     case ValueType::FUNCTION:
         return call(callee.as_function(), arg_count);
+    case ValueType::NATIVE:
+        return call_native(callee.as_native(), arg_count);
     default:
         break;
     }
@@ -246,6 +263,22 @@ bool VM::call(heap_ptr<ObjFunction> function, int arg_count) {
     }
     frames.emplace_back(function, function->chunk.code.begin(),
                         stack.end() - arg_count - 1 - stack.begin());
+    return true;
+}
+
+bool VM::call_native(heap_ptr<ObjNative> native_fn, int arg_count) {
+    if (arg_count != native_fn->arity) {
+        runtime_error("Expected {} arguments but got {}.", native_fn->arity,
+                      arg_count);
+        return false;
+    }
+    using span_size = std::span<Value>::size_type;
+    Value result = std::invoke(
+        native_fn->fun, std::span<Value>{&stack.back() - arg_count,
+                                         static_cast<span_size>(arg_count)});
+    // The -1 is to pop the function call itself.
+    stack.resize(stack.size() - (arg_count + 1));
+    push(result);
     return true;
 }
 

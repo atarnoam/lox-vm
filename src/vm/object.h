@@ -1,8 +1,12 @@
 #pragma once
 
+#include <functional>
+#include <span>
 #include <string>
 #include <type_traits>
 #include <utility>
+
+struct Value;
 
 namespace object {
 constinit inline auto str_hash_func = std::hash<std::string>{};
@@ -26,4 +30,11 @@ struct ObjString {
 
 struct ObjStringHash {
     object::hash_t operator()(const ObjString &string);
+};
+
+using NativeFn = std::function<Value(std::span<Value>)>;
+
+struct ObjNative {
+    int arity;
+    NativeFn fun;
 };

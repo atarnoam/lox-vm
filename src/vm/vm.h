@@ -72,8 +72,13 @@ struct VM {
         }
     }
 
+    void define_native(const std::string &name, const ObjNative &native);
+    /** Define all natives from the natives list.*/
+    void define_all_natives();
+
     bool call_value(const Value &callee, int arg_count);
     bool call(heap_ptr<ObjFunction> function, int arg_count);
+    bool call_native(heap_ptr<ObjNative> native_fn, int arg_count);
 
     template <typename... Args>
     void runtime_error(fmt::format_string<Args...> fmt, Args &&...args) {

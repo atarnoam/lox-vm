@@ -33,3 +33,4 @@
 
 bazel-**
 MODULE.bazel.lock
+callgrind*

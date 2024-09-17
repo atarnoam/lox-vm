@@ -10,7 +10,10 @@
 struct HeapManager {
     HeapManager();
 
-    Value initialize(auto t) { return Value(t); }
+    template <typename T, typename... Args>
+    Value initialize(Args &&...args) {
+        return heap.make<T>(std::forward<Args>(args)...);
+    }
 
     Value initialize(const std::string &string);
     Value initialize(const std::string_view &string);

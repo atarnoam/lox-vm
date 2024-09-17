@@ -80,6 +80,7 @@ cc_library(
         ":chunk",
         ":debug",
         ":heap_manager",
+        ":natives",
         ":object",
         ":value",
         "//src:debug_flags",
@@ -126,5 +127,15 @@ cc_library(
         "//src/vm:obj_function_fwd",
         "//src/vm:object",
         "//src/vm/gc:heap_obj",
+    ],
+)
+
+cc_library(
+    name = "natives",
+    srcs = ["natives.cc"],
+    hdrs = ["natives.h"],
+    deps = [
+        "//src/vm:object",
+        "//src/vm:value",
     ],
 )
