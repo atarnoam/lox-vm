@@ -11,3 +11,7 @@ struct ObjFunction {
     heap_ptr<ObjString> name;
     Chunk chunk;
 };
+
+struct ObjClosure {
+    heap_ptr<ObjFunction> function;
+};

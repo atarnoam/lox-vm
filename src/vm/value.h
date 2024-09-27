@@ -8,7 +8,7 @@
 #include "src/vm/obj_function.fwd.h"
 #include "src/vm/object.h"
 
-enum struct ValueType { BOOL, NIL, NUMBER, STRING, FUNCTION, NATIVE };
+enum struct ValueType { BOOL, NIL, NUMBER, STRING, FUNCTION, NATIVE, CLOSURE };
 
 struct Value {
     /// @brief Initialize to nil.
@@ -18,6 +18,7 @@ struct Value {
     Value(heap_ptr<ObjString> string);
     Value(heap_ptr<ObjFunction> function);
     Value(heap_ptr<ObjNative> native);
+    Value(heap_ptr<ObjClosure> closure);
 
     Value(const Value &other);
 
@@ -28,6 +29,7 @@ struct Value {
     heap_ptr<ObjString> as_string() const;
     heap_ptr<ObjFunction> as_function() const;
     heap_ptr<ObjNative> as_native() const;
+    heap_ptr<ObjClosure> as_closure() const;
 
     /// @brief The only false types are nil and "false".
     operator bool() const;
@@ -36,6 +38,7 @@ struct Value {
     operator heap_ptr<ObjString>() const;
     operator heap_ptr<ObjFunction>() const;
     operator heap_ptr<ObjNative>() const;
+    operator heap_ptr<ObjClosure>() const;
 
     bool is_bool() const;
     bool is_nil() const;
@@ -43,6 +46,7 @@ struct Value {
     bool is_string() const;
     bool is_function() const;
     bool is_native() const;
+    bool is_closure() const;
 
     bool operator==(const Value &other) const;
 
@@ -54,6 +58,7 @@ struct Value {
         heap_ptr<ObjString> string;
         heap_ptr<ObjFunction> function;
         heap_ptr<ObjNative> native;
+        heap_ptr<ObjClosure> closure;
 
         ValueU();
         ValueU(bool boolean);
@@ -61,6 +66,7 @@ struct Value {
         ValueU(heap_ptr<ObjString> string);
         ValueU(heap_ptr<ObjFunction> function);
         ValueU(heap_ptr<ObjNative> native);
+        ValueU(heap_ptr<ObjClosure> closure);
     } as;
 
 #ifndef __INTELLISENSE__

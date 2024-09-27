@@ -18,6 +18,9 @@ Value::Value(heap_ptr<ObjFunction> function)
 Value::Value(heap_ptr<ObjNative> native)
     : m_type(ValueType::NATIVE), as(native) {}
 
+Value::Value(heap_ptr<ObjClosure> closure)
+    : m_type(ValueType::CLOSURE), as(closure) {}
+
 Value::Value(const Value &other) : m_type(other.m_type) {
     memcpy(&as, &other.as, sizeof(as));
 }
@@ -34,6 +37,8 @@ heap_ptr<ObjFunction> Value::as_function() const { return as.function; }
 
 heap_ptr<ObjNative> Value::as_native() const { return as.native; }
 
+heap_ptr<ObjClosure> Value::as_closure() const { return as.closure; }
+
 Value::operator double() const { return as_number(); }
 
 Value::operator heap_ptr<ObjString>() const { return as_string(); }
@@ -41,6 +46,8 @@ Value::operator heap_ptr<ObjString>() const { return as_string(); }
 Value::operator heap_ptr<ObjFunction>() const { return as_function(); }
 
 Value::operator heap_ptr<ObjNative>() const { return as_native(); }
+
+Value::operator heap_ptr<ObjClosure>() const { return as_closure(); }
 
 bool Value::is_bool() const { return m_type == ValueType::BOOL; }
 
@@ -53,6 +60,8 @@ bool Value::is_string() const { return m_type == ValueType::STRING; }
 bool Value::is_function() const { return m_type == ValueType::FUNCTION; }
 
 bool Value::is_native() const { return m_type == ValueType::NATIVE; }
+
+bool Value::is_closure() const { return m_type == ValueType::CLOSURE; }
 
 Value::operator bool() const { return !is_nil() and (!is_bool() or as_bool()); }
 
@@ -73,6 +82,8 @@ bool Value::operator==(const Value &other) const {
         return as_function() == other.as_function();
     case ValueType::NATIVE:
         return as_native() == other.as_native();
+    case ValueType::CLOSURE:
+        return as_closure() == other.as_closure();
     }
 
     throw std::runtime_error("Unexpected Value type");
@@ -101,6 +112,8 @@ std::ostream &operator<<(std::ostream &os, const Value &value) {
     case ValueType::NATIVE:
         // TODO: add names to natives.
         return os << "<native fn>";
+    case ValueType::CLOSURE:
+        return os << Value(value.as_closure()->function);
     }
 
     throw std::runtime_error("Unexpected Value type");
@@ -117,3 +130,5 @@ Value::ValueU::ValueU(heap_ptr<ObjString> string) : string(string) {}
 Value::ValueU::ValueU(heap_ptr<ObjFunction> function) : function(function) {}
 
 Value::ValueU::ValueU(heap_ptr<ObjNative> native) : native(native) {}
+
+Value::ValueU::ValueU(heap_ptr<ObjClosure> closure) : closure(closure) {}
