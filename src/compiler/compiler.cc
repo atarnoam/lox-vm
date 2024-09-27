@@ -115,7 +115,8 @@ void Compiler::function(FunctionType type) {
 
     compiler.end_scope();
     auto function = compiler.end_compilation();
-    emit_constant(function);
+    // TODO: If closure is not needed, emit function.
+    emit(OpCode::CLOSURE, make_constant(function));
 }
 
 void Compiler::print_statement() {

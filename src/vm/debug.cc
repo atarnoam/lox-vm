@@ -97,6 +97,14 @@ int disassemble_instruction(Chunk &chunk, int offset) {
         return jump_instruction("LOOP", -1, chunk, offset);
     case OpCode::CALL:
         return byte_instruction("CALL", chunk, offset);
+    case OpCode::CLOSURE: {
+        offset++;
+        const_ref_t constant = chunk.code[offset++].constant_ref;
+        std::cout << fmt::format("{:16s} {:4d} ", "OP_CLOSURE", constant);
+        std::cout << chunk.constants[constant];
+        std::cout << "\n";
+        return offset;
+    }
     default:
         std::cout << fmt::format("Unknown opcode {}\n",
                                  static_cast<int>(instruction));

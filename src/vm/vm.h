@@ -25,11 +25,11 @@ enum struct InterpretMode { FILE, INTERACTIVE };
 using Stack = std::vector<Value>;
 
 struct CallFrame {
-    CallFrame(heap_ptr<ObjFunction> function, CodeVec::const_iterator ip,
+    CallFrame(heap_ptr<ObjClosure> closure, CodeVec::const_iterator ip,
               size_t slots);
     Chunk &chunk();
 
-    heap_ptr<ObjFunction> function;
+    heap_ptr<ObjClosure> closure;
     CodeVec::const_iterator ip;
     const size_t slots;
 };
@@ -77,7 +77,7 @@ struct VM {
     void define_all_natives();
 
     bool call_value(const Value &callee, int arg_count);
-    bool call(heap_ptr<ObjFunction> function, int arg_count);
+    bool call(heap_ptr<ObjClosure> closure, int arg_count);
     bool call_native(heap_ptr<ObjNative> native_fn, int arg_count);
 
     template <typename... Args>
@@ -85,7 +85,7 @@ struct VM {
         std::cerr << fmt::format(fmt, std::forward<Args>(args)...) << '\n';
 
         for (const auto &frame : std::ranges::reverse_view(frames)) {
-            auto function = frame.function;
+            auto function = frame.closure->function;
             size_t instruction = frame.ip - function->chunk.code.begin() - 1;
             std::cerr << fmt::format("[line {}] in ",
                                      function->chunk.get_line(instruction));

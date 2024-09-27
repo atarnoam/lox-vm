@@ -14,7 +14,11 @@ VM::VM(InterpretMode interpret_mode) : m_interpret_mode(interpret_mode) {
 
 InterpretResult VM::run_script(heap_ptr<ObjFunction> main) {
     stack.emplace_back(main);
-    call(main, 0);
+    heap_ptr<ObjClosure> main_closure =
+        heap_manager.initialize<ObjClosure>(main);
+    pop();
+    push(main_closure);
+    call(main_closure, 0);
     InterpretResult result = run();
     return result;
 }
@@ -171,6 +175,12 @@ InterpretResult VM::run() {
             // This is the "jump".
             frame = &frames.back();
         } break;
+        case OpCode::CLOSURE: {
+            auto function = read_constant(frame).as_function();
+            heap_ptr<ObjClosure> closure =
+                heap_manager.initialize<ObjClosure>(function);
+            push(closure);
+        } break;
         case OpCode::RETURN: {
             Value returned = pop();
             size_t last_slot = frame->slots;
@@ -239,10 +249,13 @@ void VM::define_all_natives() {
 
 bool VM::call_value(const Value &callee, int arg_count) {
     switch (callee.type()) {
-    case ValueType::FUNCTION:
-        return call(callee.as_function(), arg_count);
     case ValueType::NATIVE:
         return call_native(callee.as_native(), arg_count);
+    case ValueType::CLOSURE:
+        return call(callee.as_closure(), arg_count);
+    // Removed calling of functions, as they are always closed by closures.
+    case ValueType::FUNCTION:
+        /* fallthrough */
     default:
         break;
     }
@@ -250,7 +263,8 @@ bool VM::call_value(const Value &callee, int arg_count) {
     return false;
 }
 
-bool VM::call(heap_ptr<ObjFunction> function, int arg_count) {
+bool VM::call(heap_ptr<ObjClosure> closure, int arg_count) {
+    auto function = closure->function;
     if (arg_count != function->arity) {
         runtime_error("Expected {} arguments but got {}.", function->arity,
                       arg_count);
@@ -261,7 +275,7 @@ bool VM::call(heap_ptr<ObjFunction> function, int arg_count) {
         runtime_error("Stack overflow.");
         return false;
     }
-    frames.emplace_back(function, function->chunk.code.begin(),
+    frames.emplace_back(closure, function->chunk.code.begin(),
                         stack.end() - arg_count - 1 - stack.begin());
     return true;
 }
@@ -304,8 +318,8 @@ InterpretResult interpret(VM &vm, const std::string &source) {
     return result;
 }
 
-CallFrame::CallFrame(heap_ptr<ObjFunction> function, CodeVec::const_iterator ip,
+CallFrame::CallFrame(heap_ptr<ObjClosure> closure, CodeVec::const_iterator ip,
                      size_t slots)
-    : function(function), ip(std::move(ip)), slots(slots) {}
+    : closure(closure), ip(std::move(ip)), slots(slots) {}
 
-Chunk &CallFrame::chunk() { return function->chunk; }
+Chunk &CallFrame::chunk() { return closure->function->chunk; }

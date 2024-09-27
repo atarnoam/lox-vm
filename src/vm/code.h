@@ -32,6 +32,7 @@ enum struct OpCode : int8_t {
     JUMP_IF_TRUE,
     LOOP,
     CALL,
+    CLOSURE,
     RETURN
 };
 
