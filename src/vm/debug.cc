@@ -1,5 +1,6 @@
 #include "debug.h"
 
+#include "src/vm/obj_function.h"
 #include <fmt/format.h>
 #include <iostream>
 
@@ -59,6 +60,10 @@ int disassemble_instruction(Chunk &chunk, int offset) {
         return constant_instruction("GET_GLOBAL", chunk, offset);
     case OpCode::SET_GLOBAL:
         return constant_instruction("SET_GLOBAL", chunk, offset);
+    case OpCode::GET_UPVALUE:
+        return byte_instruction("GET_UPVALUE", chunk, offset);
+    case OpCode::SET_UPVALUE:
+        return byte_instruction("SET_UPVALUE", chunk, offset);
     case OpCode::ADD:
         return simple_instruction("ADD", offset);
     case OpCode::SUBTRACT:
@@ -103,6 +108,18 @@ int disassemble_instruction(Chunk &chunk, int offset) {
         std::cout << fmt::format("{:16s} {:4d} ", "OP_CLOSURE", constant);
         std::cout << chunk.constants[constant];
         std::cout << "\n";
+
+        heap_ptr<ObjFunction> function =
+            chunk.constants[constant].as_function();
+
+        for (const_ref_t j = 0; j < function->upvalue_count; ++j) {
+            bool is_local = chunk.code[offset++].constant_ref;
+            const_ref_t index = chunk.code[offset++].constant_ref;
+            std::cout << fmt::format("{:04d}    |                     {} {}\n",
+                                     offset - 2, is_local ? "local" : "upvalue",
+                                     index);
+        }
+
         return offset;
     }
     default:

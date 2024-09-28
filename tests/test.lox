@@ -1,15 +1,11 @@
-fun fib(x) {
-    if (x < 2) {
-        return x;
+fun outer() {
+  var a = 1;
+  var b = 2;
+  fun middle() {
+    var c = 3;
+    var d = 4;
+    fun inner() {
+      print a + c + b + d;
     }
-    return fib(x - 1) + fib(x - 2);
-}
-
-var start = clock();
-print fib(20);
-var end = clock();
-print end - start;
-
-for (var i = 0; i < 10; i = i + 1) {
-    print fib(i);
+  }
 }

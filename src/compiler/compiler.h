@@ -41,11 +41,19 @@ struct Local {
     int depth;
 };
 
+struct UpValue {
+    const_ref_t index;
+    bool is_local;
+
+    bool operator==(const UpValue &other) const = default;
+};
+
 enum struct FunctionType { FUNCTION, SCRIPT };
 
 struct Compiler {
     Compiler(HeapManager &heap_manager, Parser &parser,
-             FunctionType type = FunctionType::SCRIPT);
+             FunctionType type = FunctionType::SCRIPT,
+             Compiler *enclosing = nullptr);
 
     std::optional<heap_ptr<ObjFunction>> compile();
 
@@ -110,6 +118,9 @@ struct Compiler {
     const_ref_t make_constant(const Value &value);
     const_ref_t identifier_constant(const Token &name);
     std::optional<const_ref_t> resolve_local(const Token &name);
+    std::optional<const_ref_t> resolve_upvalue(const Token &name);
+
+    const_ref_t add_upvalue(const_ref_t index, bool is_local);
 
     void named_variable(const Token &name, bool can_assign);
     // Mark last variable defined as initialized, with depth the current scope
@@ -128,6 +139,8 @@ struct Compiler {
     int scope_depth;
     heap_ptr<ObjFunction> compiling_function;
     FunctionType type;
+    Compiler *const enclosing;
+    std::vector<UpValue> upvalues;
 };
 
 struct ParseRule {

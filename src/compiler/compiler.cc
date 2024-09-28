@@ -22,13 +22,14 @@ Token empty_token() { return {TokenType::END_OF_FILE, "", 0}; }
 
 Local empty_local() { return {empty_token(), 0}; }
 
-Compiler::Compiler(HeapManager &heap_manager, Parser &parser, FunctionType type)
+Compiler::Compiler(HeapManager &heap_manager, Parser &parser, FunctionType type,
+                   Compiler *enclosing)
     : heap_manager(heap_manager), parser(parser), locals({empty_local()}),
       scope_depth(0), compiling_function(type == FunctionType::SCRIPT
                                              ? heap_manager.new_function()
                                              : heap_manager.new_function(
                                                    parser.previous.lexeme)),
-      type(type) {}
+      type(type), enclosing(enclosing), upvalues() {}
 
 std::optional<heap_ptr<ObjFunction>> Compiler::compile() {
     parser.advance();
@@ -93,7 +94,7 @@ void Compiler::function(FunctionType type) {
         std::string("Can't have more than ") + std::to_string(CONST_REF_T_MAX) +
         " parameters.";
 
-    Compiler compiler{heap_manager, parser, type};
+    Compiler compiler{heap_manager, parser, type, this};
     compiler.begin_scope();
 
     parser.consume(TokenType::LEFT_PAREN, "Expect '(' after function name.");
@@ -117,6 +118,9 @@ void Compiler::function(FunctionType type) {
     auto function = compiler.end_compilation();
     // TODO: If closure is not needed, emit function.
     emit(OpCode::CLOSURE, make_constant(function));
+    for (const auto &upvalue : compiler.upvalues) {
+        emit(upvalue.is_local ? 1 : 0, upvalue.index);
+    }
 }
 
 void Compiler::print_statement() {
@@ -516,15 +520,53 @@ std::optional<const_ref_t> Compiler::resolve_local(const Token &name) {
     return static_cast<const_ref_t>(std::distance(local, locals.rend()) - 1);
 }
 
+std::optional<const_ref_t> Compiler::resolve_upvalue(const Token &name) {
+    if (enclosing == nullptr) {
+        return std::nullopt;
+    }
+
+    auto local = enclosing->resolve_local(name);
+    if (local) {
+        return add_upvalue(local.value(), true);
+    }
+
+    auto upvalue = enclosing->resolve_upvalue(name);
+    if (upvalue) {
+        return add_upvalue(upvalue.value(), false);
+    }
+
+    return std::nullopt;
+}
+
+const_ref_t Compiler::add_upvalue(const_ref_t index, bool is_local) {
+    UpValue new_upvalue{index, is_local};
+    auto upvalue_it = std::ranges::find(upvalues, new_upvalue);
+    if (upvalue_it != upvalues.end()) {
+        return static_cast<const_ref_t>(upvalue_it - upvalues.begin());
+    }
+
+    if (compiling_function->upvalue_count == CONST_REF_T_MAX) {
+        parser.error("Too many closure variables in function.");
+        return 0;
+    }
+
+    upvalues.push_back(new_upvalue);
+    return compiling_function->upvalue_count++;
+}
+
 void Compiler::named_variable(const Token &name, bool can_assign) {
     OpCode get_op, set_op;
-    std::optional<const_ref_t> arg_opt = resolve_local(name);
     const_ref_t arg;
 
+    std::optional<const_ref_t> arg_opt = resolve_local(name);
     if (arg_opt) {
         arg = arg_opt.value();
         get_op = OpCode::GET_LOCAL;
         set_op = OpCode::SET_LOCAL;
+    } else if ((arg_opt = resolve_upvalue(name))) {
+        arg = arg_opt.value();
+        get_op = OpCode::GET_UPVALUE;
+        set_op = OpCode::SET_UPVALUE;
     } else {
         arg = identifier_constant(name);
         get_op = OpCode::GET_GLOBAL;

@@ -9,6 +9,7 @@ struct ObjFunction {
 
     int arity;
     heap_ptr<ObjString> name;
+    const_ref_t upvalue_count;
     Chunk chunk;
 };
 

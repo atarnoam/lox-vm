@@ -26,6 +26,8 @@ enum struct OpCode : int8_t {
     GET_GLOBAL,
     SET_LOCAL,
     GET_LOCAL,
+    SET_UPVALUE,
+    GET_UPVALUE,
     PRINT,
     JUMP,
     JUMP_IF_FALSE,

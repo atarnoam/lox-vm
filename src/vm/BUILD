@@ -22,6 +22,7 @@ cc_library(
     hdrs = ["debug.h"],
     deps = [
         ":chunk",
+        ":obj_function",
         ":value",
         "@fmt",
     ],
