@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
 #include "src/vm/chunk.h"
+#include "src/vm/value.h"
 
 TEST(ChunkTests, TestLineData) {
     Chunk chunk;

@@ -38,3 +38,7 @@ struct ObjNative {
     int arity;
     NativeFn fun;
 };
+
+struct UpValue {
+    heap_ptr<Value> location;
+};

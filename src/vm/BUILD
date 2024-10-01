@@ -99,6 +99,7 @@ cc_test(
     srcs = ["chunk_test.cc"],
     deps = [
         ":chunk",
+        ":value",
         "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
