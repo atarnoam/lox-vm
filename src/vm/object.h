@@ -1,5 +1,6 @@
 #pragma once
 
+#include "src/vm/gc/heap_obj.h"
 #include <functional>
 #include <span>
 #include <string>
