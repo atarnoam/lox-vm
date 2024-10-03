@@ -33,6 +33,7 @@ cc_library(
     hdrs = ["value.h"],
     deps = [
         "//src/vm:obj_function_fwd",
+        "//src/vm:obj_upvalue_fwd",
         "//src/vm:object",
         "//src/vm/gc:heap_obj",
         "@fmt",
@@ -130,6 +131,23 @@ cc_library(
         "//src/vm:obj_function_fwd",
         "//src/vm:object",
         "//src/vm/gc:heap_obj",
+    ],
+)
+
+cc_library(
+    name = "obj_upvalue_fwd",
+    hdrs = ["obj_upvalue.fwd.h"],
+    deps = [
+    ],
+)
+
+cc_library(
+    name = "obj_upvalue",
+    srcs = ["obj_upvalue.cc"],
+    hdrs = ["obj_upvalue.h"],
+    deps = [
+        "//src/vm:obj_upvalue_fwd",
+        "//src/vm:value",
     ],
 )
 

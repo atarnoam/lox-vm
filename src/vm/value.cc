@@ -21,6 +21,9 @@ Value::Value(heap_ptr<ObjNative> native)
 Value::Value(heap_ptr<ObjClosure> closure)
     : m_type(ValueType::CLOSURE), as(closure) {}
 
+Value::Value(heap_ptr<ObjUpvalue> upvalue)
+    : m_type(ValueType::UPVALUE), as(upvalue) {}
+
 Value::Value(const Value &other) : m_type(other.m_type) {
     memcpy(&as, &other.as, sizeof(as));
 }
@@ -39,6 +42,8 @@ heap_ptr<ObjNative> Value::as_native() const { return as.native; }
 
 heap_ptr<ObjClosure> Value::as_closure() const { return as.closure; }
 
+heap_ptr<ObjUpvalue> Value::as_upvalue() const { return as.upvalue; }
+
 Value::operator double() const { return as_number(); }
 
 Value::operator heap_ptr<ObjString>() const { return as_string(); }
@@ -48,6 +53,8 @@ Value::operator heap_ptr<ObjFunction>() const { return as_function(); }
 Value::operator heap_ptr<ObjNative>() const { return as_native(); }
 
 Value::operator heap_ptr<ObjClosure>() const { return as_closure(); }
+
+Value::operator heap_ptr<ObjUpvalue>() const { return as_upvalue(); }
 
 bool Value::is_bool() const { return m_type == ValueType::BOOL; }
 
@@ -62,6 +69,8 @@ bool Value::is_function() const { return m_type == ValueType::FUNCTION; }
 bool Value::is_native() const { return m_type == ValueType::NATIVE; }
 
 bool Value::is_closure() const { return m_type == ValueType::CLOSURE; }
+
+bool Value::is_upvalue() const { return m_type == ValueType::UPVALUE; }
 
 Value::operator bool() const { return !is_nil() and (!is_bool() or as_bool()); }
 
@@ -84,6 +93,8 @@ bool Value::operator==(const Value &other) const {
         return as_native() == other.as_native();
     case ValueType::CLOSURE:
         return as_closure() == other.as_closure();
+    case ValueType::UPVALUE:
+        return as_upvalue() == other.as_upvalue();
     }
 
     throw std::runtime_error("Unexpected Value type");
@@ -114,6 +125,8 @@ std::ostream &operator<<(std::ostream &os, const Value &value) {
         return os << "<native fn>";
     case ValueType::CLOSURE:
         return os << Value(value.as_closure()->function);
+    case ValueType::UPVALUE:
+        return os << "upvalue";
     }
 
     throw std::runtime_error("Unexpected Value type");
@@ -132,3 +145,5 @@ Value::ValueU::ValueU(heap_ptr<ObjFunction> function) : function(function) {}
 Value::ValueU::ValueU(heap_ptr<ObjNative> native) : native(native) {}
 
 Value::ValueU::ValueU(heap_ptr<ObjClosure> closure) : closure(closure) {}
+
+Value::ValueU::ValueU(heap_ptr<ObjUpvalue> upvalue) : upvalue(upvalue) {}
