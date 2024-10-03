@@ -4,6 +4,7 @@
 #include "src/debug_flags.h"
 #include "src/vm/debug.h"
 #include "src/vm/natives.h"
+#include "src/vm/obj_upvalue.h"
 
 #include <functional>
 #include <optional>
@@ -88,6 +89,14 @@ InterpretResult VM::run() {
             }
             auto &[_, value] = *name_it;
             value = peek(0);
+        } break;
+        case OpCode::GET_UPVALUE: {
+            const_ref_t slot = read_byte(frame).constant_ref;
+            push(frame->closure->upvalues[slot]->get(stack));
+        } break;
+        case OpCode::SET_UPVALUE: {
+            const_ref_t slot = read_byte(frame).constant_ref;
+            frame->closure->upvalues[slot]->get(stack) = peek();
         } break;
         case OpCode::EQUAL: {
             Value b = pop();
@@ -180,6 +189,19 @@ InterpretResult VM::run() {
             heap_ptr<ObjClosure> closure =
                 heap_manager.initialize<ObjClosure>(function);
             push(closure);
+
+            for (const_ref_t i = 0; i < closure->upvalue_count; ++i) {
+                bool is_local =
+                    static_cast<bool>(read_byte(frame).constant_ref);
+                const_ref_t index = read_byte(frame).constant_ref;
+                if (is_local) {
+                    closure->upvalues.push_back(
+                        capture_upvalue(frame->slots + index));
+                } else {
+                    closure->upvalues.push_back(frame->closure->upvalues[i]);
+                }
+            }
+
         } break;
         case OpCode::RETURN: {
             Value returned = pop();
@@ -294,6 +316,10 @@ bool VM::call_native(heap_ptr<ObjNative> native_fn, int arg_count) {
     stack.resize(stack.size() - (arg_count + 1));
     push(result);
     return true;
+}
+
+heap_ptr<ObjUpvalue> VM::capture_upvalue(size_t local) {
+    return heap_manager.initialize<ObjUpvalue>(local);
 }
 
 void VM::print_stack() const {

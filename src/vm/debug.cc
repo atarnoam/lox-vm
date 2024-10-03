@@ -105,7 +105,7 @@ int disassemble_instruction(Chunk &chunk, int offset) {
     case OpCode::CLOSURE: {
         offset++;
         const_ref_t constant = chunk.code[offset++].constant_ref;
-        std::cout << fmt::format("{:16s} {:4d} ", "OP_CLOSURE", constant);
+        std::cout << fmt::format("{:16s} {:4d} ", "CLOSURE", constant);
         std::cout << chunk.constants[constant];
         std::cout << "\n";
 

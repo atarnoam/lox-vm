@@ -80,6 +80,9 @@ struct VM {
     bool call(heap_ptr<ObjClosure> closure, int arg_count);
     bool call_native(heap_ptr<ObjNative> native_fn, int arg_count);
 
+    // TODO: move this out of VM? heap_manager maybe?
+    heap_ptr<ObjUpvalue> capture_upvalue(size_t local);
+
     template <typename... Args>
     void runtime_error(fmt::format_string<Args...> fmt, Args &&...args) {
         std::cerr << fmt::format(fmt, std::forward<Args>(args)...) << '\n';

@@ -83,6 +83,7 @@ cc_library(
         ":debug",
         ":heap_manager",
         ":natives",
+        ":obj_upvalue",
         ":object",
         ":value",
         "//src:debug_flags",
@@ -129,6 +130,7 @@ cc_library(
     deps = [
         "//src/vm:chunk",
         "//src/vm:obj_function_fwd",
+        "//src/vm:obj_upvalue_fwd",
         "//src/vm:object",
         "//src/vm/gc:heap_obj",
     ],
