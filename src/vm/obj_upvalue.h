@@ -14,5 +14,5 @@ struct ObjUpvalue {
     // Index of local variable captured by the upvalue, relative to the frame
     // start.
     size_t index;
-    std::optional<Value> value;
+    std::optional<Value> closed;
 };

@@ -39,6 +39,7 @@ struct Local {
     Token name;
     // depth = -1 means the variable is not initialized.
     int depth;
+    bool is_captured;
 };
 
 struct Upvalue {

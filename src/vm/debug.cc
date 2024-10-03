@@ -119,9 +119,10 @@ int disassemble_instruction(Chunk &chunk, int offset) {
                                      offset - 2, is_local ? "local" : "upvalue",
                                      index);
         }
-
         return offset;
     }
+    case OpCode::CLOSE_UPVALUE:
+        return simple_instruction("CLOSE_UPVALUE", offset);
     default:
         std::cout << fmt::format("Unknown opcode {}\n",
                                  static_cast<int>(instruction));

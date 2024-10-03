@@ -1,9 +1,20 @@
+var set_x;
+var get_x;
+
 fun outer() {
-  var x = "outside";
-  fun inner() {
-    print x;
-  }
-  inner();
+    var x = 5;
+    fun _set_x(new_x) {
+        x = new_x;
+    }
+    set_x = _set_x;
+
+    fun _get_x() {
+        return x;
+    }
+    get_x = _get_x;
 }
 
 outer();
+print get_x();
+set_x(10);
+print get_x();

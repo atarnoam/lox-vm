@@ -260,7 +260,11 @@ void Compiler::end_scope() {
 
     // TODO: add OpCode::POPN to pop many times.
     while (locals.size() > 0 and locals.back().depth > scope_depth) {
-        emit(OpCode::POP);
+        if (locals.back().is_captured) {
+            emit(OpCode::CLOSE_UPVALUE);
+        } else {
+            emit(OpCode::POP);
+        }
         locals.pop_back();
     }
 }
@@ -527,6 +531,7 @@ std::optional<const_ref_t> Compiler::resolve_upvalue(const Token &name) {
 
     auto local = enclosing->resolve_local(name);
     if (local) {
+        enclosing->locals[local.value()].is_captured = true;
         return add_upvalue(local.value(), true);
     }
 
@@ -694,7 +699,8 @@ constinit ParseRule rules[]{
 
 Local::Local(Token name) : Local(name, -1) {}
 
-Local::Local(Token name, int depth) : name(name), depth(depth) {}
+Local::Local(Token name, int depth)
+    : name(name), depth(depth), is_captured(false) {}
 
 void Local::mark_initialized(int depth) { this->depth = depth; }
 

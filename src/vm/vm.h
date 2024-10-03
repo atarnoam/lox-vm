@@ -9,6 +9,7 @@
 #include "src/vm/value.h"
 
 #include <fmt/format.h>
+#include <forward_list>
 #include <functional>
 #include <ranges>
 #include <type_traits>
@@ -80,8 +81,12 @@ struct VM {
     bool call(heap_ptr<ObjClosure> closure, int arg_count);
     bool call_native(heap_ptr<ObjNative> native_fn, int arg_count);
 
-    // TODO: move this out of VM? heap_manager maybe?
-    heap_ptr<ObjUpvalue> capture_upvalue(size_t local);
+    heap_ptr<ObjUpvalue> capture_upvalue(size_t stack_index);
+    /**
+     * @brief Close all upvalues pointing to stack indices that are >=
+     * `last_index`.
+     */
+    void close_upvalues(size_t last_index);
 
     template <typename... Args>
     void runtime_error(fmt::format_string<Args...> fmt, Args &&...args) {
@@ -108,6 +113,7 @@ struct VM {
     VariableMap globals;
     Stack stack;
     InterpretMode m_interpret_mode;
+    std::forward_list<heap_ptr<ObjUpvalue>> open_upvalues;
     std::vector<CallFrame> frames;
 };
 

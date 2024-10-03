@@ -201,11 +201,15 @@ InterpretResult VM::run() {
                     closure->upvalues.push_back(frame->closure->upvalues[i]);
                 }
             }
-
         } break;
+        case OpCode::CLOSE_UPVALUE:
+            close_upvalues(stack.size() - 1);
+            pop();
+            break;
         case OpCode::RETURN: {
             Value returned = pop();
             size_t last_slot = frame->slots;
+            close_upvalues(last_slot);
 
             // After this, `frame` is invalidated!
             frames.pop_back();
@@ -318,8 +322,36 @@ bool VM::call_native(heap_ptr<ObjNative> native_fn, int arg_count) {
     return true;
 }
 
-heap_ptr<ObjUpvalue> VM::capture_upvalue(size_t local) {
-    return heap_manager.initialize<ObjUpvalue>(local);
+heap_ptr<ObjUpvalue> VM::capture_upvalue(size_t stack_index) {
+    /* The open_upvalues array is kept sorted from highest index to lowest.
+    When searching for an existing index, we search for the first index that is
+    lower (or equal) than the given index. */
+    decltype(open_upvalues)::const_iterator upvalue = open_upvalues.begin(),
+                                            upvalue_prev =
+                                                open_upvalues.before_begin();
+
+    while (upvalue != open_upvalues.end() and (*upvalue)->index > stack_index) {
+        upvalue_prev = upvalue;
+        ++upvalue;
+    }
+
+    if (upvalue != open_upvalues.end() and (*upvalue)->index == stack_index) {
+        return *upvalue;
+    }
+
+    auto created_upvalue = heap_manager.initialize<ObjUpvalue>(stack_index);
+    open_upvalues.insert_after(upvalue_prev, created_upvalue);
+    return created_upvalue;
+}
+
+void VM::close_upvalues(size_t last_index) {
+    while (!open_upvalues.empty() and
+           open_upvalues.front()->index >= last_index) {
+        heap_ptr<ObjUpvalue> upvalue = open_upvalues.front();
+        // yank!
+        upvalue->closed = upvalue->get(stack);
+        open_upvalues.erase_after(open_upvalues.before_begin());
+    }
 }
 
 void VM::print_stack() const {
