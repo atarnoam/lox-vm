@@ -539,7 +539,7 @@ std::optional<const_ref_t> Compiler::resolve_upvalue(const Token &name) {
 }
 
 const_ref_t Compiler::add_upvalue(const_ref_t index, bool is_local) {
-    UpValue new_upvalue{index, is_local};
+    Upvalue new_upvalue{index, is_local};
     auto upvalue_it = std::ranges::find(upvalues, new_upvalue);
     if (upvalue_it != upvalues.end()) {
         return static_cast<const_ref_t>(upvalue_it - upvalues.begin());

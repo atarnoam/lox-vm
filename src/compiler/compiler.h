@@ -41,11 +41,11 @@ struct Local {
     int depth;
 };
 
-struct UpValue {
+struct Upvalue {
     const_ref_t index;
     bool is_local;
 
-    bool operator==(const UpValue &other) const = default;
+    bool operator==(const Upvalue &other) const = default;
 };
 
 enum struct FunctionType { FUNCTION, SCRIPT };
@@ -140,7 +140,7 @@ struct Compiler {
     heap_ptr<ObjFunction> compiling_function;
     FunctionType type;
     Compiler *const enclosing;
-    std::vector<UpValue> upvalues;
+    std::vector<Upvalue> upvalues;
 };
 
 struct ParseRule {

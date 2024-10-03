@@ -40,6 +40,6 @@ struct ObjNative {
     NativeFn fun;
 };
 
-struct UpValue {
+struct ObjUpvalue {
     heap_ptr<Value> location;
 };
