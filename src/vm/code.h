@@ -35,6 +35,7 @@ enum struct OpCode : int8_t {
     LOOP,
     CALL,
     CLOSURE,
+    CLOSE_UPVALUE,
     RETURN
 };
 
@@ -96,7 +97,7 @@ struct CodeChunk {
 
       private:
         // For caching - stores last offset->line gotten.
-        decltype(lines)::const_iterator last_line;
+        size_t last_line_index;
         int last_instruction;
     };
     CodeVec code;

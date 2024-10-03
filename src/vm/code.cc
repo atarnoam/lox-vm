@@ -23,7 +23,7 @@ jump_off_t &CodeChunk::jump_at(int offset) {
 }
 
 CodeChunk::LineData::LineData()
-    : lines(), last_line(lines.begin() - 1), last_instruction(-1) {}
+    : lines(), last_line_index(0), last_instruction(-1) {}
 
 void CodeChunk::LineData::add_line(int line) {
     if (lines.size() == 0) {
@@ -48,25 +48,25 @@ void CodeChunk::LineData::add_line(int line) {
 
 int CodeChunk::LineData::get_line(int instruction) {
     int curr_instruction;
-    decltype(lines)::const_iterator it;
+    size_t index;
 
     if (last_instruction == instruction) {
-        return last_line->first;
+        return lines[last_line_index].first;
     }
     if (last_instruction >= 0 and last_instruction <= instruction) {
         curr_instruction = last_instruction;
-        it = last_line;
+        index = last_line_index;
     } else {
         curr_instruction = 0;
-        it = lines.begin();
+        index = 0;
     }
 
-    for (; it < lines.end(); ++it) {
-        const auto &[line, count] = *it;
+    for (; index < lines.size(); ++index) {
+        const auto &[line, count] = lines[index];
         curr_instruction += count;
         if (instruction < curr_instruction) {
             last_instruction = curr_instruction - count;
-            last_line = it;
+            last_line_index = index;
             return line;
         }
     }
