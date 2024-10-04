@@ -46,8 +46,18 @@ struct heap_ptr {
     const T *operator->() const { return &(ptr->obj); }
     T *operator->() { return &(ptr->obj); }
 
+    const HeapObj<T> *get() const { return ptr; }
+    HeapObj<T> *get() { return ptr; }
+
     bool operator==(heap_ptr<T> other) { return ptr == other.ptr; }
     bool operator==(nullptr_t other) { return ptr == other; }
+
+    void mark() {
+        if (ptr == nullptr) {
+            return;
+        }
+        ptr->mark();
+    }
 
     // Note we don't delete ptr here.
     ~heap_ptr() = default;

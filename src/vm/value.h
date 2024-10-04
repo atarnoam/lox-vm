@@ -64,6 +64,9 @@ struct Value {
 
     bool operator==(const Value &other) const;
 
+    // For GC
+    void mark();
+
   private:
     ValueType m_type;
     union ValueU {

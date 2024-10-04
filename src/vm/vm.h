@@ -89,6 +89,7 @@ struct VM {
      */
     void close_upvalues(size_t last_index);
 
+    // Garbage collector
     void collect_garbage();
 
     template <typename... Args>

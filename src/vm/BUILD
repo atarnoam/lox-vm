@@ -45,6 +45,7 @@ cc_library(
     srcs = ["value.cc"],
     deps = [
         "//src/vm:obj_function",
+        "//src/vm:obj_upvalue",
         "//src/vm:object",
         "//src/vm:value_h",
         "//src/vm/gc:heap_obj",
@@ -150,7 +151,7 @@ cc_library(
     hdrs = ["obj_upvalue.h"],
     deps = [
         "//src/vm:obj_upvalue_fwd",
-        "//src/vm:value",
+        "//src/vm:value_h",
     ],
 )
 

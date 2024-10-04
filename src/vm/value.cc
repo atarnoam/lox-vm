@@ -1,6 +1,7 @@
 #include "value.h"
 
 #include "src/vm/obj_function.h"
+#include "src/vm/obj_upvalue.h"
 #include <fmt/format.h>
 
 Value::Value() : m_type(ValueType::NIL) {}
@@ -98,6 +99,46 @@ bool Value::operator==(const Value &other) const {
     }
 
     throw std::runtime_error("Unexpected Value type");
+}
+
+void Value::mark() {
+#define MARK_AND_LOG(ptr)                                                      \
+    {                                                                          \
+        ptr.mark();                                                            \
+        if constexpr (DEBUG_LOG_GC) {                                          \
+            std::cout << static_cast<void *>(ptr.get()) << " mark " << *this   \
+                      << "\n";                                                 \
+        }                                                                      \
+    }
+    switch (m_type) {
+    case ValueType::BOOL:
+    case ValueType::NIL:
+    case ValueType::NUMBER:
+        break;
+    case ValueType::STRING: {
+        auto ptr = as_string();
+        MARK_AND_LOG(ptr);
+    } break;
+    case ValueType::FUNCTION: {
+        auto ptr = as_function();
+        MARK_AND_LOG(ptr);
+    } break;
+    case ValueType::NATIVE: {
+        auto ptr = as_native();
+        MARK_AND_LOG(ptr);
+    } break;
+    case ValueType::CLOSURE: {
+        auto ptr = as_closure();
+        MARK_AND_LOG(ptr);
+    } break;
+    case ValueType::UPVALUE: {
+        auto ptr = as_upvalue();
+        MARK_AND_LOG(ptr);
+    } break;
+    default:
+        break;
+    }
+#undef MARK_AND_LOG
 }
 
 std::ostream &operator<<(std::ostream &os, const Value &value) {
