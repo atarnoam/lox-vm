@@ -1,6 +1,7 @@
 #pragma once
 
 #include "src/vm/gc/heap_obj.h"
+#include <forward_list>
 #include <utility>
 
 struct Heap {
@@ -8,11 +9,11 @@ struct Heap {
 
     template <typename T, typename... Args>
     heap_ptr<T> make(Args &&...args) {
-        HeapObj<T> *ptr = new HeapObj<T>(obj, std::forward<Args>(args)...);
+        HeapObj<T> *ptr = new HeapObj<T>(std::forward<Args>(args)...);
         if (!ptr) {
             return nullptr;
         }
-        obj = ptr;
+        objects.push_front(ptr);
         return ptr;
     }
 
@@ -26,5 +27,5 @@ struct Heap {
   private:
     void delete_all();
 
-    HeapData *obj;
+    std::forward_list<HeapData *> objects;
 };

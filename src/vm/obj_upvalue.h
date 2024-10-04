@@ -8,8 +8,22 @@
 struct ObjUpvalue {
     ObjUpvalue(size_t location);
 
-    Value &get(std::vector<Value> &stack);
-    const Value &get(const std::vector<Value> &stack) const;
+    template <typename Allocator>
+    Value &get(std::vector<Value, Allocator> &stack) {
+        if (closed) {
+            return closed.value();
+        } else {
+            return stack[index];
+        }
+    }
+    template <typename Allocator>
+    const Value &get(const std::vector<Value, Allocator> &stack) const {
+        if (closed) {
+            return closed.value();
+        } else {
+            return stack[index];
+        }
+    }
 
     // Index of local variable captured by the upvalue, relative to the frame
     // start.

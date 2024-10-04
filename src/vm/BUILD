@@ -89,6 +89,7 @@ cc_library(
         "//src:debug_flags",
         "//src/compiler",
         "//src/vm:obj_function",
+        "//src/vm/gc:gc_allocator",
         "//src/vm/gc:heap",
         "//src/vm/gc:heap_obj",
         "@fmt",

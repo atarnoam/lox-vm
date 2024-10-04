@@ -7,22 +7,22 @@
 
 struct HeapData {
     HeapData();
-    HeapData(HeapData *next);
 
     virtual ~HeapData() = default;
+
+    void mark();
+    bool is_marked() const;
 
     friend class Heap;
 
   private:
-    HeapData *next;
     bool marked;
 };
 
 template <typename T>
 struct HeapObj : HeapData {
     template <typename... Args>
-    HeapObj(HeapData *next, Args... args)
-        : HeapData(next), obj(std::forward<Args>(args)...) {}
+    HeapObj(Args... args) : obj(std::forward<Args>(args)...) {}
 
     T obj;
 };

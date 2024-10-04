@@ -9,7 +9,10 @@
 #include <functional>
 #include <optional>
 
-VM::VM(InterpretMode interpret_mode) : m_interpret_mode(interpret_mode) {
+VM::VM(InterpretMode interpret_mode)
+    : stack(new_gc_vector<Value>(
+          std::function<void(void)>(std::bind(&VM::collect_garbage, this)))),
+      m_interpret_mode(interpret_mode) {
     define_all_natives();
 }
 
@@ -351,6 +354,16 @@ void VM::close_upvalues(size_t last_index) {
         // yank!
         upvalue->closed = upvalue->get(stack);
         open_upvalues.erase_after(open_upvalues.before_begin());
+    }
+}
+
+void VM::collect_garbage() {
+    if constexpr (DEBUG_LOG_GC) {
+        std::cout << "-- gc begin\n";
+    }
+
+    if constexpr (DEBUG_LOG_GC) {
+        std::cout << "-- gc end\n";
     }
 }
 

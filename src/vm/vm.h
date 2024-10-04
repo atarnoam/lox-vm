@@ -1,6 +1,7 @@
 #pragma once
 
 #include "src/vm/chunk.h"
+#include "src/vm/gc/gc_allocator.h"
 #include "src/vm/gc/heap.h"
 #include "src/vm/gc/heap_obj.h"
 #include "src/vm/heap_manager.h"
@@ -23,7 +24,7 @@ constexpr int FRAMES_MAX = 64;
 enum struct InterpretResult { OK, COMPILE_ERROR, RUNTIME_ERROR };
 enum struct InterpretMode { FILE, INTERACTIVE };
 
-using Stack = std::vector<Value>;
+using Stack = typename std::vector<Value, GCAllocator<Value>>;
 
 struct CallFrame {
     CallFrame(heap_ptr<ObjClosure> closure, CodeVec::const_iterator ip,
@@ -87,6 +88,8 @@ struct VM {
      * `last_index`.
      */
     void close_upvalues(size_t last_index);
+
+    void collect_garbage();
 
     template <typename... Args>
     void runtime_error(fmt::format_string<Args...> fmt, Args &&...args) {

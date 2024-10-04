@@ -24,3 +24,9 @@ cc_test(
         "@googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "gc_allocator",
+    hdrs = ["gc_allocator.h"],
+    deps = ["//src:debug_flags"],
+)

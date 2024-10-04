@@ -1,8 +1,10 @@
 #include "heap_obj.h"
 
-HeapData::HeapData() : HeapData(nullptr) {}
+HeapData::HeapData() : marked(false) {}
 
-HeapData::HeapData(HeapData *next) : next(next), marked(false) {}
+void HeapData::mark() { marked = true; }
+
+bool HeapData::is_marked() const { return marked; }
 
 void debug_test_size_heap_ptr() {
     if constexpr (DEBUG_SIZEOF_ASSERTS) {
