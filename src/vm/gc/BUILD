@@ -4,14 +4,23 @@ cc_library(
     name = "heap",
     srcs = ["heap.cc"],
     hdrs = ["heap.h"],
-    deps = [":heap_obj"],
+    deps = [
+        ":heap_obj",
+        "//src:debug_flags",
+        "//src/util:type_name",
+        "@fmt",
+    ],
 )
 
 cc_library(
     name = "heap_obj",
     srcs = ["heap_obj.cc"],
     hdrs = ["heap_obj.h"],
-    deps = ["//src:debug_flags"],
+    deps = [
+        "//src:debug_flags",
+        "//src/util:type_name",
+        "@fmt",
+    ],
 )
 
 cc_test(

@@ -1,8 +1,10 @@
 #pragma once
 
 #include "src/debug_flags.h"
-
+#include "src/util/type_name.h"
 #include <cstddef>
+#include <fmt/format.h>
+#include <iostream>
 #include <utility>
 
 struct HeapData {
@@ -23,6 +25,13 @@ template <typename T>
 struct HeapObj : HeapData {
     template <typename... Args>
     HeapObj(Args... args) : obj(std::forward<Args>(args)...) {}
+
+    ~HeapObj() {
+        if constexpr (DEBUG_LOG_GC) {
+            std::cout << fmt::format("{:p} free {}\n",
+                                     static_cast<void *>(this), type_name<T>());
+        }
+    }
 
     T obj;
 };

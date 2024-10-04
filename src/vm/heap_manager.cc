@@ -11,7 +11,6 @@ heap_ptr<ObjString> HeapManager::initialize(const std::string &string) {
     } else {
         return string_it->second;
     }
-    return heap.make<ObjString>(string);
 }
 
 heap_ptr<ObjString> HeapManager::initialize(const std::string_view &string) {
