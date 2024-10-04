@@ -106,8 +106,7 @@ void Value::mark() {
     {                                                                          \
         ptr.mark();                                                            \
         if constexpr (DEBUG_LOG_GC) {                                          \
-            std::cout << static_cast<void *>(ptr.get()) << " mark " << *this   \
-                      << "\n";                                                 \
+            std::cout << ptr.get() << " mark " << *this << "\n";               \
         }                                                                      \
     }
     switch (m_type) {

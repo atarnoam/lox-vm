@@ -15,9 +15,8 @@ struct Heap {
     heap_ptr<T> make(Args &&...args) {
         HeapObj<T> *ptr = new HeapObj<T>(std::forward<Args>(args)...);
         if constexpr (DEBUG_LOG_GC) {
-            std::cout << fmt::format("{:p} allocate {} for {}\n",
-                                     static_cast<void *>(ptr), sizeof(ptr),
-                                     type_name<T>());
+            std::cout << fmt::format("{:p} allocate {} for {}\n", fmt::ptr(ptr),
+                                     sizeof(ptr), type_name<T>());
         }
         if (!ptr) {
             return nullptr;

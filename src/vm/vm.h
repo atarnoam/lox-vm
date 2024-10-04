@@ -89,6 +89,8 @@ struct VM {
      */
     void close_upvalues(size_t last_index);
 
+    void mark_globals();
+    void mark_roots();
     // Garbage collector
     void collect_garbage();
 

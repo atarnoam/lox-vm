@@ -357,10 +357,39 @@ void VM::close_upvalues(size_t last_index) {
     }
 }
 
+void VM::mark_globals() {
+    for (const auto &[name, value] : globals) {
+        const_cast<heap_ptr<ObjString> &>(name).mark();
+        // name is not a `Value` so we need to log its mark.
+        if constexpr (DEBUG_LOG_GC) {
+            std::cout << name.get() << " mark " << name->str() << "\n";
+        }
+        const_cast<Value &>(value).mark();
+    }
+
+    for (auto &frame : frames) {
+        frame.closure.mark();
+    }
+
+    for (auto &upvalue : open_upvalues) {
+        upvalue.mark();
+    }
+}
+
+void VM::mark_roots() {
+    for (auto &value : stack) {
+        value.mark();
+    }
+
+    mark_globals();
+}
+
 void VM::collect_garbage() {
     if constexpr (DEBUG_LOG_GC) {
         std::cout << "-- gc begin\n";
     }
+
+    mark_roots();
 
     if constexpr (DEBUG_LOG_GC) {
         std::cout << "-- gc end\n";
