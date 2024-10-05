@@ -39,3 +39,9 @@ cc_library(
     hdrs = ["gc_allocator.h"],
     deps = ["//src:debug_flags"],
 )
+
+cc_library(
+    name = "gc_type",
+    hdrs = ["gc_type.h"],
+    deps = [],
+)
